@@ -8,10 +8,12 @@ WORKDIR /ws
 
 COPY src/ src/
 
-# Resolve every dependency declared in the package.xml files (build, exec, test).
+# Resolve build and test dependencies only: the simulation stack (Gazebo, TurtleBot4)
+# is an exec dependency of semantic_nav_bringup and is not needed to build/test.
 RUN apt-get update \
     && rosdep update --rosdistro jazzy \
     && rosdep install --from-paths src --ignore-src --rosdistro jazzy -y \
+        -t buildtool -t buildtool_export -t build -t build_export -t test \
     && rm -rf /var/lib/apt/lists/*
 
 RUN source /opt/ros/jazzy/setup.bash \
