@@ -1,0 +1,4 @@
+# Query the semantic map. Empty label_filter returns every object.
+string label_filter
+---
+SemanticObject[] objects

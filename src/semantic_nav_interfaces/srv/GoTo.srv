@@ -1,0 +1,7 @@
+# Ask the robot to navigate to an object from the semantic map, e.g. "refrigerator".
+string label
+---
+# True if a navigation goal was accepted for a matching object.
+bool success
+# Human-readable explanation (chosen object, or why the request failed).
+string message
