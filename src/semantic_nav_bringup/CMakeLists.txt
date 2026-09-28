@@ -20,6 +20,7 @@ install(
     scripts/measure_sim_performance.py
     scripts/mapping_drive.py
     scripts/nav_goal_test.py
+    scripts/detection_tour.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
