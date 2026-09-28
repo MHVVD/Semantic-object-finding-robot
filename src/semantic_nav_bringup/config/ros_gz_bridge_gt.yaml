@@ -1,0 +1,11 @@
+# Extra bridge used only with sim.launch.py gt_boxes:=true (detector evaluation).
+# The boundingbox_camera publishes, for every frame, the 2D box of each visible
+# model that carries a gz Label; the label is the COCO class index
+# (see scripts/generate_house_world.py). ros_gz_bridge converts
+# gz.msgs.AnnotatedAxisAligned2DBox_V to vision_msgs/Detection2DArray with
+# results[0].hypothesis.class_id = str(label).
+- ros_topic_name: "/oakd/gt_boxes"
+  gz_topic_name: "/oakd/gt_boxes"
+  ros_type_name: "vision_msgs/msg/Detection2DArray"
+  gz_type_name: "gz.msgs.AnnotatedAxisAligned2DBox_V"
+  direction: GZ_TO_ROS

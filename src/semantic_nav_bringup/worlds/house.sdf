@@ -236,6 +236,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>57</label>
+      </plugin>
     </include>
     <include>
       <name>tv_stand_living</name>
@@ -252,6 +255,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>62</label>
+      </plugin>
     </include>
     <include>
       <name>chair_1</name>
@@ -260,6 +266,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>56</label>
+      </plugin>
     </include>
     <include>
       <name>potted_plant_1</name>
@@ -268,6 +277,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>58</label>
+      </plugin>
     </include>
     <include>
       <name>potted_plant_2</name>
@@ -276,6 +288,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>58</label>
+      </plugin>
     </include>
     <include>
       <name>refrigerator_1</name>
@@ -284,6 +299,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>72</label>
+      </plugin>
     </include>
     <include>
       <name>sink_1</name>
@@ -292,6 +310,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>71</label>
+      </plugin>
     </include>
     <include>
       <name>dining_table_1</name>
@@ -300,6 +321,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>60</label>
+      </plugin>
     </include>
     <include>
       <name>chair_2</name>
@@ -308,6 +332,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>56</label>
+      </plugin>
     </include>
     <include>
       <name>chair_3</name>
@@ -316,6 +343,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>56</label>
+      </plugin>
     </include>
     <include>
       <name>chair_4</name>
@@ -324,6 +354,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>56</label>
+      </plugin>
     </include>
     <include>
       <name>chair_5</name>
@@ -332,6 +365,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>56</label>
+      </plugin>
     </include>
     <include>
       <name>toilet_1</name>
@@ -340,6 +376,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>61</label>
+      </plugin>
     </include>
     <include>
       <name>sink_2</name>
@@ -348,6 +387,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>71</label>
+      </plugin>
     </include>
     <include>
       <name>bed_1</name>
@@ -356,6 +398,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>59</label>
+      </plugin>
     </include>
     <include>
       <name>tv_stand_bedroom</name>
@@ -372,6 +417,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>62</label>
+      </plugin>
     </include>
     <include>
       <name>chair_6</name>
@@ -380,6 +428,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>56</label>
+      </plugin>
     </include>
     <include>
       <name>potted_plant_3</name>
@@ -388,6 +439,9 @@
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
       <static>true</static>
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>58</label>
+      </plugin>
     </include>
   </world>
 </sdf>

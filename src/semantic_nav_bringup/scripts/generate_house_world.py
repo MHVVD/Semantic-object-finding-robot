@@ -32,6 +32,11 @@ Floor plan (world frame, metres, +x right, +y up, origin at the house centre):
 Objects are named <coco_label>_<n> (spaces -> underscores) so that
 extract_ground_truth.py can read the ground truth back out of the SDF.
 
+Every COCO object also gets gz-sim's Label system with its COCO class index
+(COCO_IDS below). Labels are invisible to the RGB camera; they only feed the
+optional ground-truth boundingbox_camera (sim.launch.py gt_boxes:=true) that
+the detector evaluation uses.
+
 Run from the package root and commit the output:
     python3 scripts/generate_house_world.py
 """
@@ -67,6 +72,11 @@ FLOORS = [
     ('bathroom', -5.0, 0.0, -1.5, 4.0, (0.70, 0.78, 0.82)),  # blue tile
     ('bedroom', -1.5, 0.0, 5.0, 4.0, (0.62, 0.48, 0.34)),    # walnut
 ]
+
+# COCO-80 class indices (same order as YOLO's class list) of the classes placed
+# below. Used as gz Label values, so ground-truth boxes carry the COCO id.
+COCO_IDS = {'chair': 56, 'couch': 57, 'potted plant': 58, 'bed': 59, 'dining table': 60,
+            'toilet': 61, 'tv': 62, 'sink': 71, 'refrigerator': 72}
 
 # Objects: (name, uri, x, y, z, yaw). Poses were tuned by rendering the world.
 OBJECTS = [
@@ -140,7 +150,17 @@ def floor_model(name, x0, y0, x1, y1, rgb):
     </model>"""
 
 
+def coco_label(name):
+    """'dining_table_1' -> 'dining table'."""
+    return name.rsplit('_', 1)[0].replace('_', ' ')
+
+
 def include(name, uri, x, y, z, yaw):
+    label = COCO_IDS.get(coco_label(name))
+    plugin = '' if label is None else f"""
+      <plugin filename="gz-sim-label-system" name="gz::sim::systems::Label">
+        <label>{label}</label>
+      </plugin>"""
     return f"""
     <include>
       <name>{name}</name>
@@ -148,7 +168,7 @@ def include(name, uri, x, y, z, yaw):
       <pose>{fmt(x, y, z, 0, 0, yaw)}</pose>
       <!-- Force static: several Fuel models (Chair, Sofa, Toilet, KitchenSink) are
            dynamic with mesh collisions, which cost ~40% real-time factor. -->
-      <static>true</static>
+      <static>true</static>{plugin}
     </include>"""
 
 
