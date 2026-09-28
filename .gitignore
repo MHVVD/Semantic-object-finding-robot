@@ -14,3 +14,7 @@ __pycache__/
 
 # Private milestone reports
 docs/learning/
+
+# slam_toolbox serialized pose graphs (large; regenerate with slam.launch.py)
+src/semantic_nav_bringup/maps/*.posegraph
+src/semantic_nav_bringup/maps/*.data
