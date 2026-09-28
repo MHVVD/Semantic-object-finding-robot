@@ -1,0 +1,10 @@
+# Goals for scripts/nav_goal_test.py: five NavigateToPose goals, each in a different room
+# than the previous one. Poses are in the Gazebo *world* frame (x, y in m, yaw in rad);
+# the script converts them to the map frame using robot_spawn from ground_truth.yaml.
+goal_timeout: 240.0     # s of sim time before a goal is cancelled and counted as failed
+goals:
+  - {name: kitchen_fridge,   x: 3.6,  y: -3.4, yaw: 0.0}      # living room -> kitchen
+  - {name: bedroom_east,     x: 4.1,  y: 1.0,  yaw: 1.5708}   # kitchen -> bedroom (via living room)
+  - {name: bathroom,         x: -3.3, y: 1.8,  yaw: 1.5708}   # bedroom -> bathroom
+  - {name: bedroom_west,     x: 0.2,  y: 2.6,  yaw: 0.0}      # bathroom -> bedroom
+  - {name: living_room_home, x: -1.0, y: -2.4, yaw: 0.0}      # bedroom -> living room (start)
