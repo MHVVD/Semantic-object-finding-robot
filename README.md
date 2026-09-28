@@ -74,6 +74,43 @@ ros2 run semantic_nav_bringup nav_goal_test.py --sim-truth
 Latest benchmark: 5/5 goals across rooms, 0 recoveries, 214 s sim time,
 final error <= 0.15 m, AMCL error vs ground truth 0.07 m mean.
 
+### Detection (Milestone 3)
+
+YOLO11n (Ultralytics) exported to ONNX and run with OpenVINO on the CPU.
+OpenVINO has no rosdep key, so install it once for the system Python, pinning
+NumPy so cv_bridge keeps working:
+
+```bash
+echo "numpy==$(python3 -c 'import numpy; print(numpy.__version__)')" > /tmp/np.txt
+pip install --user --break-system-packages -c /tmp/np.txt openvino
+# export the models (throwaway venv with PyTorch; writes src/semantic_nav_perception/models/)
+python3 -m venv .venv-export
+.venv-export/bin/pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+.venv-export/bin/pip install ultralytics onnx onnxslim
+.venv-export/bin/python tools/export_yolo.py
+colcon build --symlink-install
+```
+
+```bash
+# detector on a running sim (debug image in the RViz "Detections" panel)
+ros2 launch semantic_nav_bringup navigation.launch.py
+ros2 launch semantic_nav_bringup perception.launch.py
+# dataset: sim with ground-truth boxes + recorder + a Nav2 camera tour
+ros2 launch semantic_nav_bringup navigation.launch.py gt_boxes:=true
+ros2 launch semantic_nav_bringup perception.launch.py capture:=true
+ros2 run semantic_nav_bringup detection_tour.py
+# offline: per-class quality and latency
+ros2 run semantic_nav_perception evaluate_detector --data ~/semantic_nav_data/frames
+ros2 run semantic_nav_perception benchmark_detector --images ~/semantic_nav_data/frames/images \
+    --models models/yolo11n.onnx models/yolov8n.onnx --sizes 640x480 416x320
+```
+
+On the i5-8265U: 27-37 ms inference at 640x480 (CPU idle), ~50-70 ms with the
+simulation running; mAP50 0.53 on 212 simulator frames. Works well for tv,
+toilet and potted plant, partially for bed, couch and chair, and poorly for
+dining table, sink and refrigerator (camera 0.24 m above the floor). Fine-tuning
+notebook for Colab: [tools/finetune_yolo_colab.ipynb](tools/finetune_yolo_colab.ipynb).
+
 Or in Docker:
 
 ```bash
@@ -86,7 +123,7 @@ docker run --rm semantic_nav
 - [x] M0 — workspace, interfaces, CI
 - [x] M1 — simulation: house world, TurtleBot4, bridge, RViz
 - [x] M2 — SLAM map + Nav2/AMCL navigation
-- [ ] Detection (YOLO → ONNX → OpenVINO)
+- [x] M3 — detection: YOLO11n → ONNX → OpenVINO, evaluated per class
 - [ ] Deprojection into the map frame
 - [ ] Semantic map (data association)
 - [ ] Commander + Nav2
