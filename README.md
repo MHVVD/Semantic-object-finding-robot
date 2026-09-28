@@ -59,6 +59,21 @@ The first run downloads the furniture models from Gazebo Fuel (needs internet, ~
 cached in `~/.gz/fuel`). Ground truth for evaluation is in
 `src/semantic_nav_bringup/config/ground_truth.yaml`.
 
+### Mapping and navigation (Milestone 2)
+
+```bash
+# SLAM (slam_toolbox online async) + sim; drive with teleop or the scripted route
+ros2 launch semantic_nav_bringup slam.launch.py
+ros2 run semantic_nav_bringup mapping_drive.py
+ros2 run nav2_map_server map_saver_cli -f src/semantic_nav_bringup/maps/house --ros-args -p use_sim_time:=true
+# Nav2 + AMCL on the saved map, then the 5-goal benchmark
+ros2 launch semantic_nav_bringup navigation.launch.py
+ros2 run semantic_nav_bringup nav_goal_test.py --sim-truth
+```
+
+Latest benchmark: 5/5 goals across rooms, 0 recoveries, 214 s sim time,
+final error <= 0.15 m, AMCL error vs ground truth 0.07 m mean.
+
 Or in Docker:
 
 ```bash
@@ -70,7 +85,7 @@ docker run --rm semantic_nav
 
 - [x] M0 — workspace, interfaces, CI
 - [x] M1 — simulation: house world, TurtleBot4, bridge, RViz
-- [ ] SLAM
+- [x] M2 — SLAM map + Nav2/AMCL navigation
 - [ ] Detection (YOLO → ONNX → OpenVINO)
 - [ ] Deprojection into the map frame
 - [ ] Semantic map (data association)
