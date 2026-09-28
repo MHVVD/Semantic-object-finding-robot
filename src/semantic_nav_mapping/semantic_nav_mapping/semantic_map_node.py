@@ -36,6 +36,7 @@ Parameters (all loaded from semantic_nav_bringup/config/params.yaml):
 """
 
 import rclpy
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.parameter import Parameter
 
@@ -62,15 +63,13 @@ class SemanticMapNode(Node):
 
 
 def main(args=None):
-    rclpy.init(args=args)
-    node = SemanticMapNode()
+    # Ctrl-C under `ros2 launch` delivers SIGINT twice (terminal + launch), so the
+    # interrupt can land anywhere in shutdown; catching it here keeps exits clean.
     try:
-        rclpy.spin(node)
-    except KeyboardInterrupt:
+        rclpy.init(args=args)
+        rclpy.spin(SemanticMapNode())
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
-    finally:
-        node.destroy_node()
-        rclpy.try_shutdown()
 
 
 if __name__ == '__main__':
