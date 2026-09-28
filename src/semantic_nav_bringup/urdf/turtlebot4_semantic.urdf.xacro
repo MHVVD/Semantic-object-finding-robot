@@ -3,7 +3,7 @@
   Derived from turtlebot4_description (Apache-2.0, Clearpath Robotics),
   urdf/standard/turtlebot4.urdf.xacro.
   Change for semantic_nav: includes oakd_semantic.urdf.xacro and exposes camera_width,
-  camera_height, camera_rate xacro args; uses rplidar_semantic.urdf.xacro
+  camera_height, camera_rate, gt_boxes xacro args; uses rplidar_semantic.urdf.xacro
   with a lidar_rate xacro arg.
 -->
 <robot name="turtlebot4" xmlns:xacro="http://ros.org/wiki/xacro">
@@ -11,6 +11,7 @@
   <xacro:arg name="camera_height" default="480"/>
   <xacro:arg name="camera_rate" default="10"/>
   <xacro:arg name="lidar_rate" default="10"/>
+  <xacro:arg name="gt_boxes" default="false"/>
   <!-- Base create3 model -->
   <xacro:include filename="$(find irobot_create_description)/urdf/create3.urdf.xacro" />
   <xacro:include filename="$(find semantic_nav_bringup)/urdf/rplidar_semantic.urdf.xacro" />
@@ -134,7 +135,7 @@
 
   <xacro:oakd_semantic model="pro" parent_link="oakd_camera_bracket"
                       image_width="$(arg camera_width)" image_height="$(arg camera_height)"
-                      update_rate="$(arg camera_rate)">
+                      update_rate="$(arg camera_rate)" gt_boxes="$(arg gt_boxes)">
     <origin xyz="${oakd_pro_x_offset} ${oakd_pro_y_offset} ${oakd_pro_z_offset}"/>
   </xacro:oakd_semantic>
 

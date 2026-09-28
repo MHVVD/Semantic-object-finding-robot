@@ -34,6 +34,8 @@ Launch arguments:
     x, y, yaw      Spawn pose in the world frame (default: -1.0 -2.4 0.0).
     camera_width, camera_height, camera_rate   OAK-D image size / rate (640 480 10).
     lidar_rate     RPLIDAR scan rate in Hz (default: 10).
+    gt_boxes       true: add a ground-truth boundingbox_camera and bridge its boxes
+                   to /oakd/gt_boxes (detector evaluation only; default: false).
 """
 
 import os
@@ -63,6 +65,7 @@ def robot_description(context):
         f'camera_height:={arg["camera_height"]}',
         f'camera_rate:={arg["camera_rate"]}',
         f'lidar_rate:={arg["lidar_rate"]}',
+        f'gt_boxes:={arg["gt_boxes"]}',
     ], text=True)
     # create3.urdf.xacro hard-codes <render_engine>ogre</render_engine> for the
     # Sensors system; substitute so ogre2 (PBR materials) can be used.
@@ -111,6 +114,13 @@ def launch_setup(context):
         parameters=[{'config_file': os.path.join(pkg, 'config', 'ros_gz_bridge.yaml'),
                      'use_sim_time': True}])
 
+    gt_bridge = Node(
+        package='ros_gz_bridge', executable='parameter_bridge', name='gt_bridge',
+        output='screen',
+        parameters=[{'config_file': os.path.join(pkg, 'config', 'ros_gz_bridge_gt.yaml'),
+                     'use_sim_time': True}],
+        condition=IfCondition(LaunchConfiguration('gt_boxes')))
+
     create3_common = get_package_share_directory('irobot_create_common_bringup')
     create3_gz = get_package_share_directory('irobot_create_gz_bringup')
     create3 = [
@@ -140,7 +150,7 @@ def launch_setup(context):
                         '--child-frame-id', f'{ROBOT_NAME}/rplidar_link/rplidar']),
     ]
 
-    return [gazebo, rsp, spawn, bridge, *create3, *static_tfs]
+    return [gazebo, rsp, spawn, bridge, gt_bridge, *create3, *static_tfs]
 
 
 def generate_launch_description():
@@ -160,6 +170,7 @@ def generate_launch_description():
         DeclareLaunchArgument('camera_height', default_value='480'),
         DeclareLaunchArgument('camera_rate', default_value='10'),
         DeclareLaunchArgument('lidar_rate', default_value='10'),
+        DeclareLaunchArgument('gt_boxes', default_value='false', choices=['true', 'false']),
 
         AppendEnvironmentVariable('GZ_SIM_RESOURCE_PATH', os.path.join(pkg, 'models')),
         AppendEnvironmentVariable('GZ_SIM_RESOURCE_PATH', os.path.join(pkg, 'worlds')),

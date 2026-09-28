@@ -28,6 +28,7 @@ frame was created by slam_toolbox at the robot's spawn pose.
 Launch arguments:
     sim          Also start sim.launch.py (default: true).
     headless     Passed to sim.launch.py (default: true).
+    gt_boxes     Passed to sim.launch.py: ground-truth 2D boxes (default: false).
     rviz         Start RViz with rviz/nav.rviz (default: true).
     map          Map YAML (default: maps/house.yaml).
     params_file  Nav2 parameters (default: config/nav2_params.yaml).
@@ -50,6 +51,7 @@ def generate_launch_description():
     sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(pkg, 'launch', 'sim.launch.py')),
         launch_arguments={'headless': LaunchConfiguration('headless'),
+                          'gt_boxes': LaunchConfiguration('gt_boxes'),
                           'rviz': 'false'}.items(),
         condition=IfCondition(LaunchConfiguration('sim')))
 
@@ -72,6 +74,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('sim', default_value='true', choices=['true', 'false']),
         DeclareLaunchArgument('headless', default_value='true', choices=['true', 'false']),
+        DeclareLaunchArgument('gt_boxes', default_value='false', choices=['true', 'false']),
         DeclareLaunchArgument('rviz', default_value='true', choices=['true', 'false']),
         DeclareLaunchArgument('map', default_value=os.path.join(pkg, 'maps', 'house.yaml')),
         DeclareLaunchArgument('params_file',
