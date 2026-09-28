@@ -42,6 +42,23 @@ source install/setup.bash
 ros2 launch semantic_nav_bringup semantic_nav.launch.py
 ```
 
+### Simulation (Milestone 1)
+
+```bash
+# headless Gazebo server + RViz (recommended on a laptop)
+ros2 launch semantic_nav_bringup sim.launch.py
+# with the Gazebo GUI instead
+ros2 launch semantic_nav_bringup sim.launch.py headless:=false rviz:=false
+# drive (TurtleBot4 on Jazzy expects TwistStamped)
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true
+# real-time factor and sensor rates
+ros2 run semantic_nav_bringup measure_sim_performance.py --duration 30
+```
+
+The first run downloads the furniture models from Gazebo Fuel (needs internet, ~70 MB,
+cached in `~/.gz/fuel`). Ground truth for evaluation is in
+`src/semantic_nav_bringup/config/ground_truth.yaml`.
+
 Or in Docker:
 
 ```bash
@@ -52,7 +69,8 @@ docker run --rm semantic_nav
 ## Status
 
 - [x] M0 — workspace, interfaces, CI
-- [ ] Simulation + SLAM
+- [x] M1 — simulation: house world, TurtleBot4, bridge, RViz
+- [ ] SLAM
 - [ ] Detection (YOLO → ONNX → OpenVINO)
 - [ ] Deprojection into the map frame
 - [ ] Semantic map (data association)
