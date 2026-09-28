@@ -1,0 +1,39 @@
+# ros_gz_bridge topics for the semantic_nav simulation (world "house", model "turtlebot4").
+#
+# Direction: GZ_TO_ROS = Gazebo publishes, bridge republishes in ROS.
+# Topics the Create3 stack already bridges (cmd_vel, wheel odometry TF, bumper,
+# cliff/IR sensors, ground-truth pose) come from irobot_create_gz_bringup's
+# create3_ros_gz_bridge.launch.py and are NOT repeated here; see the M1 report.
+
+# Simulation clock -> every node with use_sim_time:=true follows it.
+- ros_topic_name: "/clock"
+  gz_topic_name: "/clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "gz.msgs.Clock"
+  direction: GZ_TO_ROS
+
+# 2D lidar (RPLIDAR A1 model on the TurtleBot4).
+- ros_topic_name: "/scan"
+  gz_topic_name: "/world/house/model/turtlebot4/link/rplidar_link/sensor/rplidar/scan"
+  ros_type_name: "sensor_msgs/msg/LaserScan"
+  gz_type_name: "gz.msgs.LaserScan"
+  direction: GZ_TO_ROS
+
+# OAK-D Pro RGB-D camera (rgbd_camera sensor: colour + aligned depth + intrinsics).
+- ros_topic_name: "/oakd/rgb/preview/image_raw"
+  gz_topic_name: "/world/house/model/turtlebot4/link/oakd_rgb_camera_frame/sensor/rgbd_camera/image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/oakd/rgb/preview/depth"
+  gz_topic_name: "/world/house/model/turtlebot4/link/oakd_rgb_camera_frame/sensor/rgbd_camera/depth_image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/oakd/rgb/preview/camera_info"
+  gz_topic_name: "/world/house/model/turtlebot4/link/oakd_rgb_camera_frame/sensor/rgbd_camera/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: GZ_TO_ROS
