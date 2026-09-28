@@ -44,6 +44,7 @@ pre code { background: none; }
 table { border-collapse: collapse; width: 100%; font-size: 9pt; margin: 8px 0; }
 th, td { border: 1px solid #bbb; padding: 4px 6px; vertical-align: top; text-align: left; }
 th { background: #eee; }
+img { max-width: 100%; height: auto; display: block; margin: 6px auto; page-break-inside: avoid; }
 blockquote { border-left: 3px solid #999; margin-left: 0; padding-left: 10px; color: #333; }
 """
 
