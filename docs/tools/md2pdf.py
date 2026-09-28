@@ -25,6 +25,7 @@ Usage:
 """
 
 import pathlib
+import re
 import sys
 
 import markdown
@@ -49,9 +50,32 @@ blockquote { border-left: 3px solid #999; margin-left: 0; padding-left: 10px; co
 """
 
 
+LIST_ITEM = re.compile(r'^\s*(?:[-*+]|\d+\.)\s')
+
+
+def blank_line_before_lists(text):
+    """
+    Insert a blank line before a list that directly follows a paragraph line.
+
+    GitHub renders such lists, Python-Markdown folds them into the paragraph.
+    Fenced code blocks are left untouched.
+    """
+    out, in_code, prev = [], False, ''
+    for line in text.splitlines():
+        if line.lstrip().startswith('```'):
+            in_code = not in_code
+        elif (not in_code and LIST_ITEM.match(line) and prev.strip()
+              and not LIST_ITEM.match(prev) and not prev.startswith(' ')):
+            out.append('')
+        out.append(line)
+        prev = line
+    return '\n'.join(out) + '\n'
+
+
 def main():
     src = pathlib.Path(sys.argv[1])
-    body = markdown.markdown(src.read_text(), extensions=['extra', 'toc', 'sane_lists'])
+    text = blank_line_before_lists(src.read_text())
+    body = markdown.markdown(text, extensions=['extra', 'toc', 'sane_lists'])
     html = f'<html><head><meta charset="utf-8"><style>{CSS}</style></head><body>{body}</body></html>'
     out = src.with_suffix('.pdf')
     HTML(string=html, base_url=str(src.parent)).write_pdf(out)
