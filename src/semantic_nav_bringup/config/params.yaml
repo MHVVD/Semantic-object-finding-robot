@@ -6,8 +6,42 @@ detector_node:
     use_sim_time: true
     image_topic: /oakd/rgb/preview/image_raw
     detections_topic: /semantic_nav/detections
-    model_path: ""            # set in the perception milestone (YOLO .onnx)
-    confidence_threshold: 0.5
+    debug_image_topic: /semantic_nav/detections_image
+    # Relative paths resolve inside semantic_nav_perception's share directory;
+    # tools/export_yolo.py writes both files (see M3 report for the model choice).
+    model_path: models/yolo11n.onnx
+    class_names_path: models/yolo11n.yaml
+    # 640x480 = the camera resolution: no resize, no padding (multiples of 32).
+    input_width: 640
+    input_height: 480
+    # 0.3: recall 0.42 / precision 0.85 on the M3 evaluation (0.4: 0.35 / 0.88).
+    # The semantic map needs repeated observations, which filters one-off false
+    # positives, so recall is worth more than precision here.
+    confidence_threshold: 0.3
+    iou_threshold: 0.5
+    # The COCO classes placed in worlds/house.sdf. ['*'] = all 80 classes.
+    class_whitelist: [chair, couch, potted plant, bed, dining table, toilet, tv, sink,
+                      refrigerator]
+    device: CPU
+    num_threads: 0            # 0 = let OpenVINO choose (all physical cores)
+    # 5 Hz of image time is plenty for the semantic map; processing every 10 Hz
+    # frame cost 17 % real-time factor vs 6.5 % at 5 Hz (M3 report). 0 = every frame.
+    max_rate_hz: 5.0
+    stats_period_s: 5.0
+
+# Dataset recorder (not part of the running system; see capture.launch.py).
+capture_frames:
+  ros__parameters:
+    use_sim_time: true
+    image_topic: /oakd/rgb/preview/image_raw
+    gt_boxes_topic: /oakd/gt_boxes   # '' when the sim runs without gt_boxes:=true
+    output_dir: ~/semantic_nav_data/frames
+    class_names_path: models/yolo11n.yaml
+    min_period_s: 1.0
+    min_translation_m: 0.3
+    min_rotation_rad: 0.35
+    map_frame: map
+    base_frame: base_link
 
 projector_node:
   ros__parameters:
