@@ -20,8 +20,12 @@ RTF = (sim time elapsed on /clock) / (wall time elapsed). Topic rates are given
 both per wall-clock second and per simulated second: a camera configured for
 10 Hz should show ~10 Hz of *sim* time; its wall rate is ~10 * RTF.
 
+With --detections (M3) it also counts the detector's output topic, so the
+detector's achieved rate can be compared with the camera rate it is fed.
+
 Usage:
-    ros2 run semantic_nav_bringup measure_sim_performance.py --duration 30
+    ros2 run semantic_nav_bringup measure_sim_performance.py --duration 30 \
+        [--detections /semantic_nav/detections]
 """
 
 import argparse
@@ -32,6 +36,7 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import CameraInfo, Image, LaserScan
+from vision_msgs.msg import Detection2DArray
 
 TOPICS = [
     ('/oakd/rgb/preview/image_raw', Image),
@@ -44,12 +49,12 @@ TOPICS = [
 class Probe(Node):
     """Counts messages and records /clock against the wall clock."""
 
-    def __init__(self):
+    def __init__(self, topics):
         super().__init__('sim_performance_probe')
         self.clock_samples = []  # (wall, sim)
-        self.stamps = {name: [] for name, _ in TOPICS}
+        self.stamps = {name: [] for name, _ in topics}
         self.create_subscription(Clock, '/clock', self.on_clock, 10)
-        for name, msg_type in TOPICS:
+        for name, msg_type in topics:
             self.create_subscription(msg_type, name, self.make_cb(name), qos_profile_sensor_data)
 
     def on_clock(self, msg):
@@ -74,10 +79,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--duration', type=float, default=30.0)
     parser.add_argument('--warmup', type=float, default=3.0)
+    parser.add_argument('--detections', default='',
+                        help='also measure this vision_msgs/Detection2DArray topic')
     args = parser.parse_args()
 
     rclpy.init()
-    probe = Probe()
+    topics = TOPICS + ([(args.detections, Detection2DArray)] if args.detections else [])
+    probe = Probe(topics)
     end_warmup = time.monotonic() + args.warmup
     while time.monotonic() < end_warmup:
         rclpy.spin_once(probe, timeout_sec=0.1)

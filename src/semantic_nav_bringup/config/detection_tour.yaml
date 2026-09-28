@@ -1,0 +1,17 @@
+# Viewpoints for scripts/detection_tour.py (WORLD frame, like ground_truth.yaml).
+# The robot drives to each with Nav2 and, if spin is true, turns 360 deg in place
+# so the camera sweeps the whole room. Chosen to see every labelled object from
+# 1-4 m, while staying out of the gap between the dining chairs and the wall
+# (the lidar only sees chair legs there; see PROBLEMS_LOG #25).
+goal_timeout: 180.0      # s (sim) per viewpoint
+spin_time_allowance: 30.0  # s (sim) per 360 deg spin
+viewpoints:
+  - {name: living_centre,  x: -2.2, y: -2.4, yaw: 3.1416, spin: true}
+  - {name: living_couch,   x: -2.6, y: -3.0, yaw: 1.5708, spin: false}
+  - {name: living_east,    x: -0.5, y: -3.0, yaw: 3.1416, spin: false}
+  - {name: kitchen_west,   x: 1.2,  y: -3.4, yaw: 0.0,    spin: true}
+  - {name: kitchen_east,   x: 3.6,  y: -3.3, yaw: 0.0,    spin: true}
+  - {name: bedroom_west,   x: 0.6,  y: 1.5,  yaw: 0.0,    spin: true}
+  - {name: bedroom_east,   x: 3.9,  y: 1.6,  yaw: 3.1416, spin: true}
+  - {name: bathroom,       x: -3.3, y: 1.8,  yaw: 1.5708, spin: true}
+  - {name: living_home,    x: -1.0, y: -2.4, yaw: 0.0,    spin: false}
