@@ -39,6 +39,7 @@ h3 { font-size: 12pt; margin-top: 16px; page-break-after: avoid; }
 code { font-family: 'DejaVu Sans Mono', monospace; font-size: 9pt; background: #f2f2f2; }
 pre { background: #f6f6f6; border: 1px solid #ddd; padding: 8px; font-size: 8.5pt;
       white-space: pre-wrap; page-break-inside: avoid; }
+pre code { font-size: 7.4pt; }
 pre code { background: none; }
 table { border-collapse: collapse; width: 100%; font-size: 9pt; margin: 8px 0; }
 th, td { border: 1px solid #bbb; padding: 4px 6px; vertical-align: top; text-align: left; }
