@@ -1,0 +1,16 @@
+# colcon artefacts
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# Local tooling
+.venv*/
+
+# Private milestone reports
+docs/learning/
