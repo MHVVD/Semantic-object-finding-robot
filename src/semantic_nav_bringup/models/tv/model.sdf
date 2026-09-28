@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<!-- 55-inch flat-screen TV. Model origin: centre of the bottom of the foot, screen faces +X. -->
+<sdf version="1.9">
+  <model name="tv">
+    <static>true</static>
+    <link name="link">
+      <collision name="collision">
+        <pose>0 0 0.42 0 0 0</pose>
+        <geometry><box><size>0.06 1.24 0.72</size></box></geometry>
+      </collision>
+      <visual name="foot">
+        <pose>0 0 0.01 0 0 0</pose>
+        <geometry><box><size>0.22 0.45 0.02</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.08 0.08 0.08 1</diffuse></material>
+      </visual>
+      <visual name="neck">
+        <pose>-0.01 0 0.05 0 0 0</pose>
+        <geometry><box><size>0.04 0.08 0.08</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.08 0.08 0.08 1</diffuse></material>
+      </visual>
+      <visual name="bezel">
+        <pose>0 0 0.42 0 0 0</pose>
+        <geometry><box><size>0.05 1.24 0.72</size></box></geometry>
+        <material>
+          <ambient>0.02 0.02 0.02 1</ambient>
+          <diffuse>0.03 0.03 0.03 1</diffuse>
+          <specular>0.3 0.3 0.3 1</specular>
+          <pbr><metal><metalness>0.2</metalness><roughness>0.3</roughness></metal></pbr>
+        </material>
+      </visual>
+      <visual name="screen">
+        <pose>0.0255 0 0.43 0 0 0</pose>
+        <geometry><box><size>0.001 1.18 0.664</size></box></geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <emissive>0.6 0.6 0.6 1</emissive>
+          <pbr>
+            <metal>
+              <albedo_map>model://tv/materials/textures/screen.png</albedo_map>
+              <emissive_map>model://tv/materials/textures/screen.png</emissive_map>
+              <metalness>0.0</metalness>
+              <roughness>0.4</roughness>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>
