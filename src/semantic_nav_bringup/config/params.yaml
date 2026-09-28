@@ -1,0 +1,37 @@
+# Single source of truth for every node parameter in the project.
+# Nodes declare parameters without defaults, so a missing key fails loudly.
+
+detector_node:
+  ros__parameters:
+    use_sim_time: true
+    image_topic: /oakd/rgb/preview/image_raw
+    detections_topic: /semantic_nav/detections
+    model_path: ""            # set in the perception milestone (YOLO .onnx)
+    confidence_threshold: 0.5
+
+projector_node:
+  ros__parameters:
+    use_sim_time: true
+    detections_topic: /semantic_nav/detections
+    depth_topic: /oakd/stereo/image_raw
+    camera_info_topic: /oakd/rgb/preview/camera_info
+    output_topic: /semantic_nav/observations
+    target_frame: map
+    max_depth_m: 4.0
+
+semantic_map_node:
+  ros__parameters:
+    use_sim_time: true
+    observations_topic: /semantic_nav/observations
+    map_topic: /semantic_nav/semantic_map
+    markers_topic: /semantic_nav/markers
+    association_radius_m: 0.75
+    min_observations: 3
+
+commander_node:
+  ros__parameters:
+    use_sim_time: true
+    list_objects_service: /semantic_nav/list_objects
+    nav_action_name: navigate_to_pose
+    standoff_distance_m: 0.8
+    goal_frame: map
