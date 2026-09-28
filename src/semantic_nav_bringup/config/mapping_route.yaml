@@ -1,0 +1,42 @@
+# Route for scripts/mapping_drive.py (scripted teleop for building the SLAM map).
+# Waypoints are in the Gazebo *world* frame (see worlds/house.sdf floor plan);
+# the script converts them to the map frame using robot_spawn from ground_truth.yaml.
+# spin: true -> rotate 360 deg on arrival. Not used: the lidar already sees 360 deg, and
+# slam_toolbox adds no scans while rotating in place (it gates on travelled distance),
+# so odometry yaw error during a spin goes uncorrected and smears the map.
+# The route ends where it started, so slam_toolbox can close the loop.
+linear_speed: 0.25        # m/s (TurtleBot4 safe max is 0.306)
+angular_speed: 0.5        # rad/s (slower turns -> less odometry yaw error between SLAM updates)
+spin_speed: 0.6           # rad/s
+waypoint_tolerance: 0.15  # m
+stop_distance: 0.30       # m: lidar safety stop for obstacles straight ahead
+blocked_backup_after: 3.0 # s: if stopped by the lidar this long, reverse ...
+backup_duration: 1.5      # s: ... at 0.1 m/s for this long, then retry
+waypoint_timeout: 90.0    # s of sim time before skipping a waypoint
+waypoints:
+  - {x: -1.0, y: -2.6}     # living room, near spawn
+  - {x: -3.85, y: -2.7}                # between couch and TV stand
+  - {x: -3.85, y: -0.45}
+  - {x: -3.7, y: 0.6}                  # through the bathroom door
+  - {x: -3.3, y: 1.8}      # bathroom
+  - {x: -3.7, y: 0.6}
+  - {x: -3.7, y: -0.4}
+  - {x: -0.7, y: -0.4}                 # behind the couch
+  - {x: -0.7, y: 0.7}                  # through the bedroom door
+  - {x: 0.4, y: 1.0}
+  - {x: 4.1, y: 1.0}                   # between bed and TV stand
+  - {x: 4.2, y: 2.6}       # bedroom, east of the bed
+  - {x: 4.1, y: 1.0}
+  - {x: 0.3, y: 1.0}
+  - {x: 0.2, y: 2.6}       # bedroom, west of the bed
+  - {x: -0.7, y: 0.7}
+  - {x: -0.7, y: -0.4}
+  - {x: -0.3, y: -2.1}
+  - {x: 1.0, y: -2.1}                  # through the kitchen opening
+  # No kitchen *north* corridor (between the chairs and the wall): the lidar plane is
+  # ~0.2 m high, sees only chair legs, and the robot wedged itself under a chair seat.
+  - {x: 1.0, y: -3.4}
+  - {x: 3.6, y: -3.4}      # kitchen, south corridor near the fridge
+  - {x: 1.0, y: -3.4}
+  - {x: 1.0, y: -2.1}
+  - {x: -1.0, y: -2.4}                 # back to the start: loop closure
