@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from glob import glob
+
 from setuptools import find_packages, setup
 
 package_name = 'semantic_nav_perception'
@@ -23,6 +25,8 @@ setup(
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        # Exported models are gitignored; tools/export_yolo.py writes them here.
+        ('share/' + package_name + '/models', glob('models/*.onnx') + glob('models/*.yaml')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -39,6 +43,9 @@ setup(
         'console_scripts': [
             'detector_node = semantic_nav_perception.detector_node:main',
             'projector_node = semantic_nav_perception.projector_node:main',
+            'capture_frames = semantic_nav_perception.capture_frames:main',
+            'evaluate_detector = semantic_nav_perception.evaluate_detector:main',
+            'benchmark_detector = semantic_nav_perception.benchmark_detector:main',
         ],
     },
 )

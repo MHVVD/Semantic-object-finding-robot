@@ -18,3 +18,6 @@ docs/learning/
 # slam_toolbox serialized pose graphs (large; regenerate with slam.launch.py)
 src/semantic_nav_bringup/maps/*.posegraph
 src/semantic_nav_bringup/maps/*.data
+
+# Exported YOLO models (regenerate with tools/export_yolo.py)
+src/semantic_nav_perception/models/
