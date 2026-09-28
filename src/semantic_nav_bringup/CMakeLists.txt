@@ -8,7 +8,7 @@ find_package(ament_cmake_python REQUIRED)
 ament_python_install_package(${PROJECT_NAME})
 
 install(
-  DIRECTORY launch config worlds rviz urdf models
+  DIRECTORY launch config worlds rviz urdf models maps
   DESTINATION share/${PROJECT_NAME}
 )
 
@@ -18,6 +18,8 @@ install(
     scripts/generate_house_world.py
     scripts/generate_local_models.py
     scripts/measure_sim_performance.py
+    scripts/mapping_drive.py
+    scripts/nav_goal_test.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -28,6 +30,7 @@ if(BUILD_TESTING)
   find_package(ament_cmake_pytest REQUIRED)
   ament_add_pytest_test(test_world_tools test/test_world_tools.py TIMEOUT 60)
   ament_add_pytest_test(test_house_world test/test_house_world.py TIMEOUT 60)
+  ament_add_pytest_test(test_nav_utils test/test_nav_utils.py TIMEOUT 60)
 endif()
 
 ament_package()
