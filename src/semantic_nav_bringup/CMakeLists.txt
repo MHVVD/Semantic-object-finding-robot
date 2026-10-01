@@ -21,6 +21,7 @@ install(
     scripts/mapping_drive.py
     scripts/nav_goal_test.py
     scripts/detection_tour.py
+    scripts/projection_error.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -32,6 +33,7 @@ if(BUILD_TESTING)
   ament_add_pytest_test(test_world_tools test/test_world_tools.py TIMEOUT 60)
   ament_add_pytest_test(test_house_world test/test_house_world.py TIMEOUT 60)
   ament_add_pytest_test(test_nav_utils test/test_nav_utils.py TIMEOUT 60)
+  ament_add_pytest_test(test_eval_utils test/test_eval_utils.py TIMEOUT 60)
 endif()
 
 ament_package()
