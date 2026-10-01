@@ -82,3 +82,35 @@ def box_exit_distance(direction_xy, half_size_xy, yaw):
     tx = hx / abs(lx) if abs(lx) > 1e-12 else math.inf
     ty = hy / abs(ly) if abs(ly) > 1e-12 else math.inf
     return min(tx, ty)
+
+
+def match_map_to_ground_truth(mapped, truth, gate):
+    """
+    One-to-one match of semantic-map objects to ground-truth objects.
+
+    mapped: dicts with 'label', 'xy'.  truth: dicts with 'label', 'xy', 'half', 'yaw'.
+    A pair is allowed if the labels are equal and the map point is within `gate`
+    metres of the object's footprint; among allowed pairs the assignment minimising
+    the total centre distance is chosen (Hungarian), so one ground-truth chair can
+    never be claimed by two map chairs. Returns (matches, unmatched_map,
+    unmatched_truth) with matches = [(map_index, truth_index, centre_error_m)].
+    """
+    from scipy.optimize import linear_sum_assignment
+    big = 1e6
+    matches = []
+    for label in sorted({m['label'] for m in mapped} | {t['label'] for t in truth}):
+        mi = [i for i, m in enumerate(mapped) if m['label'] == label]
+        ti = [j for j, t in enumerate(truth) if t['label'] == label]
+        if not mi or not ti:
+            continue
+        cost = [[math.dist(mapped[i]['xy'], truth[j]['xy'])
+                 if distance_to_box(mapped[i]['xy'], truth[j]['xy'], truth[j]['half'],
+                                    truth[j]['yaw']) <= gate else big
+                 for j in ti] for i in mi]
+        rows, cols = linear_sum_assignment(cost)
+        matches += [(mi[r], ti[c], cost[r][c]) for r, c in zip(rows, cols) if cost[r][c] < big]
+    matched_map = {m for m, _, _ in matches}
+    matched_truth = {t for _, t, _ in matches}
+    return (sorted(matches),
+            [i for i in range(len(mapped)) if i not in matched_map],
+            [j for j in range(len(truth)) if j not in matched_truth])

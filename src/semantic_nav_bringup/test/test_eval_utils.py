@@ -18,7 +18,7 @@ import math
 
 import pytest
 from semantic_nav_bringup.eval_utils import (box_exit_distance, distance_to_box, error_components,
-                                             match_object)
+                                             match_map_to_ground_truth, match_object)
 
 CHAIR = {'half': (0.25, 0.25), 'yaw': 0.0}
 OBJECTS = [{'name': 'chair_1', 'label': 'chair', 'xy': (0.0, 0.0), **CHAIR},
@@ -78,3 +78,21 @@ def test_box_exit_distance_rotated_box():
 def test_box_exit_distance_diagonal_hits_nearer_face():
     # Square 1 x 1 (half 0.5) along 45 deg: exits through a corner at 0.5 * sqrt(2).
     assert box_exit_distance((1, 1), (0.5, 0.5), 0.0) == pytest.approx(0.5 * math.sqrt(2))
+
+
+def test_map_matching_is_one_to_one():
+    # Two map chairs both near chair_1: only one may claim it; the other is a
+    # false positive (duplicate). chair_2 is missed. The bed is matched.
+    mapped = [{'label': 'chair', 'xy': (0.1, 0.0)}, {'label': 'chair', 'xy': (0.3, 0.1)},
+              {'label': 'bed', 'xy': (0.5, 3.2)}]
+    matches, fp, fn = match_map_to_ground_truth(mapped, OBJECTS, 0.5)
+    assert [(m, t) for m, t, _ in matches] == [(0, 0), (2, 2)]
+    assert matches[0][2] == pytest.approx(0.1)
+    assert fp == [1] and fn == [1]
+
+
+def test_map_matching_prefers_globally_best_assignment():
+    # Each map chair lies on a different footprint -> two matches; the bed is missed.
+    mapped = [{'label': 'chair', 'xy': (0.3, 0.0)}, {'label': 'chair', 'xy': (1.6, 0.0)}]
+    matches, fp, fn = match_map_to_ground_truth(mapped, OBJECTS, 0.5)
+    assert [(m, t) for m, t, _ in matches] == [(0, 0), (1, 1)] and not fp and fn == [2]
