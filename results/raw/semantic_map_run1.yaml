@@ -1,0 +1,171 @@
+frame_id: map
+saved_at: '2026-10-01 22:22:43'
+parameters:
+  association_radius_m: 0.75
+  class_radius:
+  - bed=2.0
+  - couch=1.5
+  association_method: greedy
+  min_observations: 10
+  tentative_timeout_s: 10.0
+objects:
+- id: 3
+  label: dining table
+  position:
+  - 0.2368
+  - 3.3299
+  - 0.0057
+  confidence: 0.5741
+  observation_count: 24
+  first_seen: 9.102
+  last_seen: 15.3
+- id: 5
+  label: bed
+  position:
+  - -1.2773
+  - 1.9426
+  - 0.0153
+  confidence: 0.4681
+  observation_count: 15
+  first_seen: 17.001
+  last_seen: 59.001
+- id: 7
+  label: dining table
+  position:
+  - -3.1053
+  - 2.3289
+  - 0.0148
+  confidence: 0.3804
+  observation_count: 11
+  first_seen: 33.402
+  last_seen: 44.202
+- id: 8
+  label: toilet
+  position:
+  - -2.9836
+  - 5.7636
+  - 0.3822
+  confidence: 0.5694
+  observation_count: 27
+  first_seen: 35.202
+  last_seen: 41.7
+- id: 9
+  label: sink
+  position:
+  - -1.6748
+  - 5.91
+  - 0.6048
+  confidence: 0.5981
+  observation_count: 16
+  first_seen: 37.8
+  last_seen: 41.301
+- id: 10
+  label: chair
+  position:
+  - -3.3079
+  - 0.5693
+  - 0.3833
+  confidence: 0.8596
+  observation_count: 36
+  first_seen: 44.202
+  last_seen: 52.101
+- id: 14
+  label: bed
+  position:
+  - 2.5646
+  - 4.0651
+  - 0.1975
+  confidence: 0.6181
+  observation_count: 90
+  first_seen: 68.1
+  last_seen: 134.1
+- id: 15
+  label: chair
+  position:
+  - 0.0799
+  - 5.7317
+  - 0.3809
+  confidence: 0.8678
+  observation_count: 22
+  first_seen: 70.002
+  last_seen: 75.3
+- id: 17
+  label: potted plant
+  position:
+  - 5.5881
+  - 2.8774
+  - 0.4113
+  confidence: 0.7961
+  observation_count: 104
+  first_seen: 82.002
+  last_seen: 125.1
+- id: 18
+  label: tv
+  position:
+  - 3.3334
+  - 2.7617
+  - 0.7232
+  confidence: 0.6544
+  observation_count: 65
+  first_seen: 85.602
+  last_seen: 130.002
+- id: 21
+  label: bed
+  position:
+  - 4.1395
+  - 4.8466
+  - 0.1892
+  confidence: 0.6421
+  observation_count: 16
+  first_seen: 110.301
+  last_seen: 120.702
+- id: 24
+  label: refrigerator
+  position:
+  - 3.7082
+  - 2.9271
+  - 0.237
+  confidence: 0.5568
+  observation_count: 21
+  first_seen: 121.902
+  last_seen: 128.1
+- id: 30
+  label: tv
+  position:
+  - -0.6242
+  - 0.7115
+  - 0.5296
+  confidence: 0.5746
+  observation_count: 28
+  first_seen: 144.0
+  last_seen: 150.501
+- id: 31
+  label: potted plant
+  position:
+  - 1.1409
+  - -1.1155
+  - 0.4064
+  confidence: 0.7688
+  observation_count: 43
+  first_seen: 147.3
+  last_seen: 157.401
+- id: 33
+  label: tv
+  position:
+  - -1.3325
+  - -1.33
+  - 0.8548
+  confidence: 0.7225
+  observation_count: 13
+  first_seen: 149.301
+  last_seen: 151.701
+- id: 34
+  label: chair
+  position:
+  - 2.9322
+  - -0.2375
+  - 0.4329
+  confidence: 0.5783
+  observation_count: 60
+  first_seen: 151.701
+  last_seen: 229.2
