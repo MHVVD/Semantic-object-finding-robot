@@ -48,6 +48,9 @@ Parameters (config/params.yaml, section frontier_explorer):
     gain_weight          (double) metres of driving one metre of target is worth
     decision_period_s    (double) how often to (re)decide
     progress_timeout_s   (double) cancel + blacklist if the robot does not move closer
+    goal_timeout_s       (double) hard cap per goal (near the goal only Nav2 decides,
+                         so a goal under a table could otherwise take minutes)
+    coverage_budget_s    (double) sim-time budget for phase 2 (diminishing returns)
     blacklist_radius_m   (double) no new targets this close to a failed one
     camera_coverage      (bool)   run phase 2
     camera_hfov_rad, camera_range_m   camera model for the coverage ray cast
@@ -82,6 +85,8 @@ from std_msgs.msg import String
 from tf2_ros import Buffer, TransformException, TransformListener
 from visualization_msgs.msg import Marker, MarkerArray
 
+NEAR_GOAL_M = 0.4
+
 PARAMETERS = {
     'map_topic': Parameter.Type.STRING,
     'nav_action_name': Parameter.Type.STRING,
@@ -94,6 +99,8 @@ PARAMETERS = {
     'gain_weight': Parameter.Type.DOUBLE,
     'decision_period_s': Parameter.Type.DOUBLE,
     'progress_timeout_s': Parameter.Type.DOUBLE,
+    'goal_timeout_s': Parameter.Type.DOUBLE,
+    'coverage_budget_s': Parameter.Type.DOUBLE,
     'blacklist_radius_m': Parameter.Type.DOUBLE,
     'camera_coverage': Parameter.Type.BOOL,
     'camera_hfov_rad': Parameter.Type.DOUBLE,
@@ -123,6 +130,7 @@ class FrontierExplorer(Node):
         self.finished = False
         self.t0 = time.monotonic()
         self.goals_sent = 0
+        self.phase2_start = None
         latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.create_subscription(OccupancyGrid, p['map_topic'], self.on_map, latched)
         self.tf_buffer = Buffer()
@@ -176,6 +184,9 @@ class FrontierExplorer(Node):
         self.seen_world.update(self.key(c, r) for r, c in zip(rows, cols))
 
     # -------------------------------------------------------------- helpers
+    def sim_now(self):
+        return self.get_clock().now().nanoseconds * 1e-9
+
     def status(self, text):
         self.get_logger().info(text)
         self.status_pub.publish(String(data=text))
@@ -189,7 +200,8 @@ class FrontierExplorer(Node):
         (goal.pose.orientation.x, goal.pose.orientation.y,
          goal.pose.orientation.z, goal.pose.orientation.w) = q
         self.goal = {'kind': kind, 'xy': xy, 'yaw': yaw, 'handle': None, 'done': False,
-                     'best_dist': math.inf, 'last_progress': time.monotonic()}
+                     'best_dist': math.inf, 'last_progress': time.monotonic(),
+                     'sent': self.sim_now()}
         self.goals_sent += 1
         self.get_logger().info(f'goal {self.goals_sent}: {kind} at ({xy[0]:.2f}, {xy[1]:.2f}), '
                                f'target size {size:.1f} m')
@@ -250,10 +262,17 @@ class FrontierExplorer(Node):
                         + ('now covering unseen surfaces with the camera'
                            if self.phase == 2 else 'finishing'))
         if target is None and self.phase == 2:
-            target = self.next_view(occ, info, dist)
-            if target is None:
+            if self.phase2_start is None:
+                self.phase2_start = self.sim_now()
+            if self.sim_now() - self.phase2_start > self.p['coverage_budget_s']:
                 self.phase = 3
-                self.status('phase 2 done: every reachable surface has been seen')
+                self.status(f'phase 2 done: coverage budget of '
+                            f'{self.p["coverage_budget_s"]:.0f} s used up')
+            else:
+                target = self.next_view(occ, info, dist)
+                if target is None:
+                    self.phase = 3
+                    self.status('phase 2 done: every reachable surface has been seen')
         if target is not None:
             self.send(*target)
             return
@@ -298,10 +317,15 @@ class FrontierExplorer(Node):
         g = self.goal
         d = math.hypot(g['xy'][0] - pose[0], g['xy'][1] - pose[1])
         now = time.monotonic()
-        if d < g['best_dist'] - 0.1:
-            g['best_dist'], g['last_progress'] = d, now
+        if d < g['best_dist'] - 0.1 or d < NEAR_GOAL_M:
+            # Near the goal the robot only turns to the final heading: distance no
+            # longer shrinks, but that is not "stuck" -- Nav2 will finish or abort.
+            g['best_dist'], g['last_progress'] = min(d, g['best_dist']), now
         elif now - g['last_progress'] > self.p['progress_timeout_s']:
             self.cancel(f'no progress for {self.p["progress_timeout_s"]:.0f} s', True)
+            return
+        if self.sim_now() - g['sent'] > self.p['goal_timeout_s']:
+            self.cancel(f'goal timeout ({self.p["goal_timeout_s"]:.0f} s)', True)
             return
         if g['kind'] == 'frontier':
             c, r = self.info.to_cell(*g['xy'])

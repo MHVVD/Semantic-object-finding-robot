@@ -147,6 +147,8 @@ frontier_explorer:
     gain_weight: 1.0             # 1 m of frontier is worth 1 m of driving
     decision_period_s: 1.0
     progress_timeout_s: 20.0     # stuck -> cancel and blacklist
+    goal_timeout_s: 60.0         # sim s; hard cap per goal (e.g. a goal under a table)
+    coverage_budget_s: 150.0     # sim s for phase 2 (run 2 spent 500+ s for 0 new objects)
     blacklist_radius_m: 0.5
     camera_coverage: true        # phase 2: look at every surface with the camera
     camera_hfov_rad: 1.25        # the OAK-D in the URDF
