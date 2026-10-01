@@ -15,6 +15,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/SemanticObjectArray.msg"
   "srv/GoTo.srv"
   "srv/ListObjects.srv"
+  "srv/MapFile.srv"
   DEPENDENCIES std_msgs geometry_msgs
 )
 

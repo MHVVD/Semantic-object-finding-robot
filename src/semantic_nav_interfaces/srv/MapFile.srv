@@ -1,0 +1,10 @@
+# Save the semantic map to, or load it from, a YAML file.
+# Empty path = the node's default map_file parameter.
+string path
+---
+# True if the file was written / read and the map updated.
+bool success
+# Human-readable result (file used, or why it failed).
+string message
+# Number of objects written / loaded.
+uint32 object_count
