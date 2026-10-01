@@ -130,6 +130,25 @@ ros2 run semantic_nav_bringup projection_error.py --sim-truth --csv obs.csv &
 ros2 run semantic_nav_bringup detection_tour.py
 ```
 
+### Semantic map (Milestone 5)
+
+`semantic_map_node` fuses the per-frame observations into persistent objects:
+same-label nearest neighbour within 0.75 m (2.0 m for beds, 1.5 m for couches),
+one-to-one per frame, running-mean position, confirmed after 10 sightings,
+unconfirmed objects forgotten after 10 s unseen. It publishes
+`/semantic_nav/semantic_map` and `/semantic_nav/markers` ("Semantic map" in
+`rviz/nav.rviz`) and serves `/semantic_nav/list_objects`,
+`/semantic_nav/save_map` and `/semantic_nav/load_map`.
+
+```bash
+ros2 launch semantic_nav_bringup navigation.launch.py
+ros2 launch semantic_nav_bringup perception.launch.py      # detector + projector + map
+ros2 run semantic_nav_bringup detection_tour.py
+ros2 service call /semantic_nav/list_objects semantic_nav_interfaces/srv/ListObjects "{label_filter: chair}"
+ros2 service call /semantic_nav/save_map semantic_nav_interfaces/srv/MapFile "{path: ''}"
+ros2 run semantic_nav_bringup semantic_map_eval.py --map ~/semantic_nav_data/semantic_map.yaml
+```
+
 Or in Docker:
 
 ```bash
@@ -144,7 +163,7 @@ docker run --rm semantic_nav
 - [x] M2 — SLAM map + Nav2/AMCL navigation
 - [x] M3 — detection: YOLO11n → ONNX → OpenVINO, evaluated per class
 - [x] M4 — projection: depth + intrinsics + TF → map-frame observations
-- [ ] Semantic map (data association)
+- [x] M5 — semantic map: association, confirmation, services, save/load
 - [ ] Commander + Nav2
 
 Problems encountered and their fixes are logged in [docs/PROBLEMS_LOG.md](docs/PROBLEMS_LOG.md).
