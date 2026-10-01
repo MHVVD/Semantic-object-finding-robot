@@ -53,9 +53,17 @@ blockquote { border-left: 3px solid #999; margin-left: 0; padding-left: 10px; co
 LIST_ITEM = re.compile(r'^\s*(?:[-*+]|\d+\.)\s')
 
 
+def indent(line):
+    return len(line) - len(line.lstrip(' '))
+
+
 def blank_line_before_lists(text):
     """
     Insert a blank line before a list that directly follows a paragraph line.
+
+    Also before any list item that returns to an outer list (less indented than
+    the line before it), which Python-Markdown would otherwise absorb into the
+    nested item or paragraph above.
 
     GitHub renders such lists, Python-Markdown folds them into the paragraph.
     Fenced code blocks are left untouched.
@@ -65,16 +73,39 @@ def blank_line_before_lists(text):
         if line.lstrip().startswith('```'):
             in_code = not in_code
         elif (not in_code and LIST_ITEM.match(line) and prev.strip()
-              and not LIST_ITEM.match(prev) and not prev.startswith(' ')):
+              and (indent(line) < indent(prev)
+                   or (not LIST_ITEM.match(prev) and not prev.startswith(' ')))):
             out.append('')
         out.append(line)
         prev = line
     return '\n'.join(out) + '\n'
 
 
+def widen_indents(text):
+    """
+    Double leading spaces outside fenced code blocks.
+
+    GitHub nests a list under a 2-space indent; Python-Markdown needs 4, and
+    otherwise flattens nested items into the parent list.
+    """
+    out, in_code, extra = [], False, 0
+    for line in text.splitlines():
+        if line.lstrip().startswith('```'):
+            if not in_code:
+                extra = indent(line)       # a fence inside a list item moves with it
+            line = ' ' * extra + line
+            in_code = not in_code
+        elif in_code:
+            line = ' ' * extra + line if line.strip() else line
+        elif line.startswith(' '):
+            line = ' ' * indent(line) + line
+        out.append(line)
+    return '\n'.join(out) + '\n'
+
+
 def main():
     src = pathlib.Path(sys.argv[1])
-    text = blank_line_before_lists(src.read_text())
+    text = blank_line_before_lists(widen_indents(src.read_text()))
     body = markdown.markdown(text, extensions=['extra', 'toc', 'sane_lists'])
     html = f'<html><head><meta charset="utf-8"><style>{CSS}</style></head><body>{body}</body></html>'
     out = src.with_suffix('.pdf')
