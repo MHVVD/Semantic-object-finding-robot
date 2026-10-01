@@ -21,3 +21,6 @@ src/semantic_nav_bringup/maps/*.data
 
 # Exported YOLO models (regenerate with tools/export_yolo.py)
 src/semantic_nav_perception/models/
+
+# Benchmark process logs (raw CSVs and maps in results/raw/ are kept)
+results/raw/logs/

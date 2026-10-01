@@ -78,7 +78,14 @@ def mv(values, spec='.2f', sd=True):
         return '–'
     if var is None:
         return f'{mean:{spec}}'
-    return f'{mean:{spec}} ± {math.sqrt(var):{spec}}' if sd else f'{var:{spec}}'
+    return f'{mean:{spec}} ± {math.sqrt(var):{spec}}' if sd else variance(var)
+
+
+def variance(v):
+    """Plain notation where possible: 2128, 22.4, 0.00223, 5.1e-05."""
+    if v >= 100:
+        return f'{v:.0f}'
+    return f'{v:.3g}' if v >= 1e-3 or v == 0 else f'{v:.1e}'
 
 
 def f(value, spec='.2f'):
@@ -142,6 +149,8 @@ def semantic_map_section(runs, md):
     md.append(table(['class', 'real objects', 'TP', 'FP', 'FN', 'precision', 'recall',
                      'mean err (m)', 'median err (m)'], rows))
 
+    failure_tables(per_run, truth, md)
+
     # Plot: precision and recall per class, bars = mean over runs, dots = runs.
     fig, ax = plt.subplots(figsize=(10, 4.2))
     width = 0.38
@@ -186,6 +195,92 @@ def semantic_map_section(runs, md):
     fig.savefig(os.path.join(RESULTS, 'semantic_map_position_error.png'), dpi=130)
     plt.close(fig)
     return per_run
+
+
+def top_down_plot(per_run, truth):
+    """Per run: occupancy map, real footprints, matched / false / missed objects."""
+    from matplotlib.patches import Rectangle
+    import numpy as np
+    from PIL import Image
+    from semantic_nav_bringup.eval_utils import match_map_to_ground_truth
+    import yaml
+    maps = os.path.join(ROOT, 'src', 'semantic_nav_bringup', 'maps')
+    with open(os.path.join(maps, 'house.yaml')) as fh:
+        meta = yaml.safe_load(fh)
+    img = np.array(Image.open(os.path.join(maps, meta['image'])))
+    res, (ox, oy, _) = meta['resolution'], meta['origin']
+    extent = (ox, ox + img.shape[1] * res, oy, oy + img.shape[0] * res)
+    fig, axes = plt.subplots(1, len(per_run), figsize=(5.2 * len(per_run), 4.6), squeeze=False)
+    for ax, k in zip(axes[0], per_run):
+        ax.imshow(img, cmap='gray', extent=extent, vmin=0, vmax=255)
+        with open(os.path.join(RAW, f'semantic_map_run{k}.yaml')) as fh:
+            objects = yaml.safe_load(fh)['objects']
+        mapped = [{'label': o['label'], 'xy': tuple(o['position'][:2])} for o in objects]
+        matches, fp, fn = match_map_to_ground_truth(mapped, truth, 0.5)
+        for j, t in enumerate(truth):
+            (cx, cy), (hx, hy) = t['xy'], t['half']
+            missed = j in fn
+            ax.add_patch(Rectangle((cx - hx, cy - hy), 2 * hx, 2 * hy, fill=False, lw=1.2,
+                                   ls='--' if missed else '-',
+                                   ec='#d62728' if missed else '#2ca02c'))
+            ax.text(cx, cy + hy + 0.05, t['label'], fontsize=5.5, ha='center',
+                    color='#d62728' if missed else '#1a6e1a')
+        for m, t, _ in matches:
+            ax.plot(*zip(mapped[m]['xy'], truth[t]['xy']), color='#2ca02c', lw=0.8)
+            ax.plot(*mapped[m]['xy'], 'o', color='#2ca02c', ms=4)
+        for i in fp:
+            ax.plot(*mapped[i]['xy'], 'x', color='#ff7f0e', ms=7, mew=2)
+            ax.text(mapped[i]['xy'][0] + 0.1, mapped[i]['xy'][1] - 0.15, mapped[i]['label'],
+                    fontsize=5.5, color='#c05800')
+        ax.set_title(f'run {k}: {len(matches)} matched, {len(fp)} false, {len(fn)} missed',
+                     fontsize=9)
+        ax.set_xlim(-4.2, 6.2)
+        ax.set_ylim(-1.8, 6.6)
+        ax.set_aspect('equal')
+        ax.tick_params(labelsize=7)
+    fig.suptitle('Semantic map vs ground truth (map frame, m). Green box/dot = found '
+                 '(line to true centre), orange X = false positive, red dashed = missed',
+                 fontsize=9)
+    fig.tight_layout()
+    fig.savefig(os.path.join(RESULTS, 'semantic_map_vs_truth.png'), dpi=140)
+    plt.close(fig)
+
+
+def failure_tables(per_run, truth, md):
+    """Which real objects are found in how many runs; what every false positive sits on."""
+    from semantic_nav_bringup.eval_utils import distance_to_box, match_map_to_ground_truth
+    import yaml
+    found = {t['name']: 0 for t in truth}
+    fps = []
+    for k in per_run:
+        with open(os.path.join(RAW, f'semantic_map_run{k}.yaml')) as fh:
+            objects = yaml.safe_load(fh)['objects']
+        mapped = [{'label': o['label'], 'xy': tuple(o['position'][:2])} for o in objects]
+        matches, fp, _ = match_map_to_ground_truth(mapped, truth, 0.5)
+        for _, t, _ in matches:
+            found[truth[t]['name']] += 1
+        for i in fp:
+            xy = mapped[i]['xy']
+            near = min(truth, key=lambda t: distance_to_box(xy, t['xy'], t['half'], t['yaw']))
+            d = distance_to_box(xy, near['xy'], near['half'], near['yaw'])
+            if near['label'] == mapped[i]['label']:
+                kind = (f'duplicate of {near["name"]} (already matched)' if d <= 0.5 else
+                        f'{near["name"]} but {d:.2f} m off (displaced)')
+            elif d <= 0.5:
+                kind = f'misclassification of {near["name"]}'
+            else:
+                kind = f'nothing there (nearest {near["name"]}, {d:.1f} m)'
+            fps.append([f'run {k}', mapped[i]['label'], objects[i]['observation_count'],
+                        f'({xy[0]:.2f}, {xy[1]:.2f})', kind])
+    top_down_plot(per_run, truth)
+    md.append(f'\nHow often each real object was found ({len(per_run)} runs):\n')
+    md.append(table(['object', 'class', 'found in'],
+                    [[t['name'], t['label'], f'{found[t["name"]]}/{len(per_run)}']
+                     for t in sorted(truth, key=lambda t: (found[t['name']], t['name']))]))
+    md.append('\nEvery false positive (map frame position; sightings = confirmed '
+              'observations):\n')
+    md.append(table(['run', 'map label', 'sightings', 'position', 'what is really there'],
+                    fps))
 
 
 # ------------------------------------------------------------------ navigation

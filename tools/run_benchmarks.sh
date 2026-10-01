@@ -4,6 +4,9 @@
 #   2. restart in "deployment" mode (saved occupancy map + AMCL, the semantic map
 #      from step 1 loaded, detector off) and run 20 GoTo commands
 # Raw results go to results/raw/; then run tools/make_results.py.
+# Analyse raw observations afterwards (not while trials run: stop_all kills any
+# process started from install/):
+#   python3 src/semantic_nav_bringup/scripts/projection_error.py --replay results/raw/observations_run2.csv
 #
 # Usage:  tools/run_benchmarks.sh [first_trial] [last_trial]     (default 1 3)
 # Needs: the workspace built and sourced; nothing else running.
@@ -31,6 +34,10 @@ for i in $(seq "$FIRST" "$LAST"); do
     echo "=== trial $i: exploration ($(date +%T))"
     ros2 launch semantic_nav_bringup exploration.launch.py rviz:=false \
         > "$LOGS/explore_run$i.log" 2>&1 &
+    # Raw observations (label, map position, camera pose) for the failure analysis:
+    # was a missed object never detected, or detected too rarely to be confirmed?
+    ros2 run semantic_nav_bringup projection_error.py --duration 3000 \
+        --raw "$RAW/observations_run$i.csv" > "$LOGS/observations_run$i.log" 2>&1 &
     ros2 run semantic_nav_bringup exploration_monitor.py --duration 3000 \
         --csv "$RAW/explore_run$i.csv" --save-map "$RAW/semantic_map_run$i.yaml" \
         > "$LOGS/monitor_run$i.log" 2>&1
