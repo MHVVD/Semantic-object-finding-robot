@@ -22,6 +22,7 @@ install(
     scripts/nav_goal_test.py
     scripts/detection_tour.py
     scripts/projection_error.py
+    scripts/semantic_map_eval.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
