@@ -80,3 +80,14 @@ Milestone reports pull their "Problems and fixes" section from here.
 | 51 | Evaluation run lost: no CSV after Ctrl-C | On SIGINT rclpy shut down the context and `spin_once` raised `ExternalShutdownException`, not `KeyboardInterrupt`, so the write-at-exit code never ran. | Catch both; write each row as it arrives (line-buffered file). |
 | 52 | AMCL and Gazebo-truth camera placed the same chair 0.54 m apart | Not a bug: during in-place spins AMCL's yaw lags the truth by up to 7° (odometry over-reports rotation, #25); 7° at 3 m = 0.37 m sideways. | Measured and reported: removing localisation error cuts the median lateral error from 0.110 to 0.036 m. Candidate improvements in the M4 report. |
 | 53 | My own shell killed by `pkill -f projection_error.py` again (#40) | The same command contained a heredoc editing `projection_error.py`. | Kill helpers are script files, always called alone. |
+
+## M5 — Semantic map node
+
+| # | Symptom | Root cause | Fix |
+|---|---------|-----------|-----|
+| 54 | Replaying the M4 observations: the bed became 3 objects and the couch 3 (6 duplicates) | The bed is 2.8 m long and the couch 1.8 m; the depth camera sees different faces from different viewpoints, so observations of one object are > 0.75 m apart. | Per-class gate `class_radius: ['bed=2.0', 'couch=1.5']` (string array, ROS 2 parameters cannot be maps). Duplicates 6 -> 0. |
+| 55 | Unconfirmed one-off detections still became objects when the robot came back much later | Tentative tracks lived forever, so sparse repeated false positives eventually reached N. | `tentative_timeout_s: 10`: false positives 7 -> 4 (tuning tour) with no object lost. |
+| 56 | 4-6 confirmed false positives remain at any reasonable N (tv on the couch: 35 sightings) | Consistent misclassifications: the detector repeats the same mistake from the same place, so a count threshold cannot filter them, and association is per class so the couch never "competes" with the tv. | Documented limitation (M5 report: negative evidence / label distributions per object). N=10 keeps all detectable objects; N=20 removes most FPs on one tour but loses the fridge on the other. |
+| 57 | Parameters chosen on the same recording they were scored on | Risk of overfitting the tuning. | Validated on a fresh live tour: 13/18 matched, 0 duplicates, 6 FP, 0.223 m mean error; offline replay of that tour reproduces the live node's map exactly. |
+| 58 | A malformed map file could leave a half-loaded map | `load_dict` cleared the map before parsing every entry. | Build the new track table aside and swap it in only when every entry parsed (unit test). |
+| 59 | flake8 A003: `Track.id` shadows a builtin | — | Renamed to `track_id` (the message field stays `id`). |
