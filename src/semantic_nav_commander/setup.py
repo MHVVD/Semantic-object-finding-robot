@@ -38,6 +38,8 @@ setup(
     entry_points={
         'console_scripts': [
             'commander_node = semantic_nav_commander.commander_node:main',
+            'go_to = semantic_nav_commander.go_to:main',
+            'voice_command = semantic_nav_commander.voice_command:main',
         ],
     },
 )
