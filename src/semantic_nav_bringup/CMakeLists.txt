@@ -25,6 +25,8 @@ install(
     scripts/semantic_map_eval.py
     scripts/exploration_monitor.py
     scripts/frontier_explorer.py
+    scripts/nav_benchmark.py
+    scripts/evaluate_semantic_map.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -38,6 +40,7 @@ if(BUILD_TESTING)
   ament_add_pytest_test(test_nav_utils test/test_nav_utils.py TIMEOUT 60)
   ament_add_pytest_test(test_eval_utils test/test_eval_utils.py TIMEOUT 60)
   ament_add_pytest_test(test_frontiers test/test_frontiers.py TIMEOUT 60)
+  ament_add_pytest_test(test_benchmark_stats test/test_benchmark_stats.py TIMEOUT 60)
 endif()
 
 ament_package()
