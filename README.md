@@ -194,12 +194,84 @@ ros2 run semantic_nav_bringup exploration_monitor.py --csv run.csv --save-map ru
 Measured: complete after ~290 s sim (13.5 min wall at RTF ~0.36), 91.5 % of
 the reference map known, 38.6 m driven, 13 / 18 objects in the semantic map.
 
+### Benchmarks (Milestone 8)
+
+Three unattended trials, each: explore the unknown house and save the semantic
+map, then restart with the saved occupancy map + AMCL, load that semantic map and
+run 20 GoTo commands over random labels. Ground truth comes from the world file
+(`config/ground_truth.yaml`) and Gazebo's true robot pose, never from the robot's
+own estimates.
+
+```bash
+tools/run_benchmarks.sh 1 3            # ~1 h 45 min wall; raw data -> results/raw/
+python3 tools/make_results.py          # tables (results/RESULTS.md) + plots
+ros2 run semantic_nav_bringup evaluate_semantic_map.py results/raw/semantic_map_run*.yaml
+```
+
 Or in Docker:
 
 ```bash
 docker build -t semantic_nav .
 docker run --rm semantic_nav
 ```
+
+## Results
+
+Three full runs (explore → semantic map → 20 GoTo commands), mean ± sd over runs
+(sample variance in [results/RESULTS.md](results/RESULTS.md), which also lists
+every missed object and every false positive).
+
+**Semantic map vs ground truth** (18 objects; a map object counts if it has the
+right class and lies within 0.5 m of the real object's footprint, one-to-one):
+
+| | precision | recall | mean error | median error | false positives |
+|---|---|---|---|---|---|
+| run 1 | 0.62 | 0.56 | 0.262 m | 0.215 m | 6 |
+| run 2 | 0.59 | 0.72 | 0.275 m | 0.188 m | 9 |
+| run 3 | 0.68 | 0.72 | 0.272 m | 0.160 m | 6 |
+| **mean ± sd** | **0.63 ± 0.05** | **0.67 ± 0.10** | **0.270 ± 0.007 m** | **0.187 ± 0.028 m** | **7.0 ± 1.7** |
+
+| class | real | precision | recall | mean error |
+|---|---|---|---|---|
+| potted plant | 3 | 1.00 ± 0.00 | 0.89 ± 0.19 | 0.105 m |
+| toilet | 1 | 1.00 ± 0.00 | 1.00 ± 0.00 | 0.229 m |
+| sink | 2 | 1.00 ± 0.00 | 0.50 ± 0.00 | 0.210 m |
+| chair | 6 | 0.87 ± 0.23 | 0.50 ± 0.00 | 0.121 m |
+| tv | 2 | 0.58 ± 0.15 | 1.00 ± 0.00 | 0.223 m |
+| couch | 1 | 0.67 ± 0.47 | 0.67 ± 0.58 | 0.812 m * |
+| refrigerator | 1 | 0.33 ± 0.29 | 0.67 ± 0.58 | 0.334 m |
+| bed | 1 | 0.39 ± 0.10 | 1.00 ± 0.00 | 0.949 m * |
+| dining table | 1 | 0.00 ± 0.00 | 0.00 ± 0.00 | – |
+
+\* to the object's centre: the camera sees the near face of a 2 m bed / sofa.
+
+![Semantic map vs ground truth, per run](results/semantic_map_vs_truth.png)
+![Precision and recall per class](results/semantic_map_precision_recall.png)
+
+**Navigation: 20 GoTo commands per run.** Success = the commander reported
+arrival *and* the robot's true final position is within 1 m of a real object of
+that class:
+
+| | success | commander said "arrived" | time-to-goal | final distance to object |
+|---|---|---|---|---|
+| run 1 | 80 % | 95 % | 24.7 s | 0.56 m |
+| run 2 | 55 % | 100 % | 45.0 s | 0.69 m |
+| run 3 | 80 % | 85 % | 25.2 s | 0.65 m |
+| **mean ± sd** | **72 ± 14 %** | **93 ± 8 %** | **31.6 ± 11.6 s** (sim) | **0.63 ± 0.07 m** |
+
+Pooled: 43 / 60 commands succeeded (95 % Wilson interval 59–82 %). Every
+failure was a perception failure: 13 drove to a false positive ("wrong place"),
+4 asked for a class missing from the map; Nav2 itself never failed or timed out.
+With perfect choice among the instances already in the map, 52 / 60 (87 %) would
+have succeeded.
+
+![Navigation outcomes and success per label](results/navigation_outcomes.png)
+![Time vs distance and final distance per label](results/navigation_time_distance.png)
+
+**Exploration:** 354 ± 12 s sim (917 ± 46 s wall), 89.4 ± 2.9 % map coverage,
+41 ± 5 m driven.
+
+![Exploration progress](results/exploration_progress.png)
 
 ## Status
 
@@ -211,5 +283,6 @@ docker run --rm semantic_nav
 - [x] M5 — semantic map: association, confirmation, services, save/load
 - [x] M6 — commander: GoTo service, goal generation, Nav2, CLI and voice
 - [x] M7 — autonomous exploration: frontiers + camera coverage, semantic map without teleop
+- [x] M8 — evaluation: semantic map precision/recall, GoTo benchmark, 3 runs, failure analysis
 
 Problems encountered and their fixes are logged in [docs/PROBLEMS_LOG.md](docs/PROBLEMS_LOG.md).
