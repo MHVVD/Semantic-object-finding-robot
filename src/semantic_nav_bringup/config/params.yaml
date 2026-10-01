@@ -72,8 +72,24 @@ semantic_map_node:
     observations_topic: /semantic_nav/observations
     map_topic: /semantic_nav/semantic_map
     markers_topic: /semantic_nav/markers
+    list_objects_service: /semantic_nav/list_objects
+    save_service: /semantic_nav/save_map
+    load_service: /semantic_nav/load_map
+    map_frame: map
+    # Tuned by replaying the 1192 recorded M4 observations (semantic_map_eval.py
+    # --sweep): 0.75 m keeps single-frame scatter (~0.2 m) of one object together;
+    # beds and couches are 2-3 m long, so views of their different ends need a
+    # bigger gate or they split into several objects.
     association_radius_m: 0.75
-    min_observations: 3
+    class_radius: ['bed=2.0', 'couch=1.5']
+    association_method: greedy      # or hungarian (identical results on our data)
+    # 10 sightings (~2 s of looking at 5 Hz): false positives 16 -> 4 vs N = 3 with
+    # no real object lost; tentative objects are forgotten after 10 s unseen.
+    min_observations: 10
+    tentative_timeout_s: 10.0
+    publish_period_s: 1.0
+    map_file: ~/semantic_nav_data/semantic_map.yaml
+    load_on_start: false
 
 commander_node:
   ros__parameters:
