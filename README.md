@@ -111,6 +111,25 @@ toilet and potted plant, partially for bed, couch and chair, and poorly for
 dining table, sink and refrigerator (camera 0.24 m above the floor). Fine-tuning
 notebook for Colab: [tools/finetune_yolo_colab.ipynb](tools/finetune_yolo_colab.ipynb).
 
+### Projection to 3D (Milestone 4)
+
+`projector_node` pairs each detection message with the depth image and camera
+info of the same timestamp (`message_filters.ApproximateTimeSynchronizer`),
+takes the median valid depth inside the central half of each box, deprojects
+the box centre with the pinhole model and transforms it into `map` with tf2 at
+the image timestamp. Output: `/semantic_nav/observations`
+(`SemanticObjectArray`, one entry per detection, not yet merged) and
+`/semantic_nav/observation_markers` ("Observations" in `rviz/nav.rviz`).
+`perception.launch.py` starts it together with the detector.
+
+```bash
+ros2 launch semantic_nav_bringup navigation.launch.py
+ros2 launch semantic_nav_bringup perception.launch.py
+# error against config/ground_truth.yaml while touring the house
+ros2 run semantic_nav_bringup projection_error.py --sim-truth --csv obs.csv &
+ros2 run semantic_nav_bringup detection_tour.py
+```
+
 Or in Docker:
 
 ```bash
@@ -124,7 +143,7 @@ docker run --rm semantic_nav
 - [x] M1 — simulation: house world, TurtleBot4, bridge, RViz
 - [x] M2 — SLAM map + Nav2/AMCL navigation
 - [x] M3 — detection: YOLO11n → ONNX → OpenVINO, evaluated per class
-- [ ] Deprojection into the map frame
+- [x] M4 — projection: depth + intrinsics + TF → map-frame observations
 - [ ] Semantic map (data association)
 - [ ] Commander + Nav2
 
