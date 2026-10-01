@@ -105,3 +105,14 @@ Milestone reports pull their "Problems and fixes" section from here.
 | 66 | Second voice test instance crashed: parameters missing | Renamed the node (`-r __node:=voice_stop`); `params.yaml` sections are keyed by node name. | Test with the normal node name. |
 | 67 | Shell killed by `pkill -f commander.launch.py` (#40, #53 again) | Kill pattern in the same command line as a launch of that file. | Kill scripts always in their own call. |
 | 68 | Microphone recording clips (peak 32767, RMS ~10 900 in a 2 s test) | Capture gain probably too high (not verifiable without a speaker present). | Open item: check with `alsamixer` (Capture / Internal Mic Boost) if live recognition is poor. |
+
+## M7 — Autonomous exploration
+
+| # | Symptom | Root cause | Fix |
+|---|---------|-----------|-----|
+| 69 | No Jazzy package for m-explore-ros2 | Not released for Jazzy. | Built `explore_lite` from source in a separate overlay (`~/explore_ws`): compiles cleanly against Jazzy. |
+| 70 | explore_lite's first goal "REJECTED by the action server" | It started before Nav2's lifecycle manager had activated bt_navigator ("Action server is inactive. Rejecting the goal"). | Harmless: it retried at its next planning cycle. Our explorer waits for the action server and simply retries next cycle too. |
+| 71 | Exploration run: detector and semantic map died ("parameter 'observations_topic' is not initialized") | `exploration.launch.py` declared `params_file` (the Nav2 file); launch configurations are global, so the included perception.launch.py inherited it instead of its own default. | Renamed the argument to `nav2_params` and pass the perception params file explicitly. |
+| 72 | explore_lite livelock: 4 539 identical goals to (5.17, 2.51) in 578 s, robot not moving | A frontier at an unknown pocket behind a plant that cannot be observed from the reachable goal; Nav2 reports each goal "succeeded" instantly (within tolerance), the frontier never disappears, and every new goal resets the progress timer, so it is never blacklisted. | Documented (M7 report). Our explorer blacklists a target when it stops being worth it: no progress for 20 s, Nav2 aborts, or (phase 2) once targeted. |
+| 73 | Monitor did not save the semantic map on Ctrl-C | `ros2 run` forwards SIGINT, so a second SIGINT arrived during the save. | Ignore SIGINT after the first one. |
+| 74 | Lidar-complete map, camera-incomplete semantic map | The 12 m lidar sees whole rooms from the doorway; frontier exploration ends long before the camera (57 deg, ~3 m) has looked at the furniture. | Phase 2 in our explorer: ray-cast the camera field of view, target tiles of unseen surface cells. |

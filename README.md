@@ -176,6 +176,24 @@ ros2 run semantic_nav_commander go_to --list
 ros2 run semantic_nav_commander go_to --cancel
 ```
 
+### Autonomous exploration (Milestone 7)
+
+One launch, no teleop: the robot starts in an unknown house, builds the map
+with slam_toolbox while Nav2 drives it, and builds the semantic map on the way.
+`frontier_explorer.py` (ours, default) explores in two phases: map frontiers,
+then camera coverage (drive to viewpoints facing surfaces the camera has not
+seen yet), and returns to the start. `explorer:=explore_lite` uses
+m-explore-ros2 instead (build it from source in a separate overlay; see the
+M7 report).
+
+```bash
+ros2 launch semantic_nav_bringup exploration.launch.py              # explores on its own
+ros2 run semantic_nav_bringup exploration_monitor.py --csv run.csv --save-map run.yaml
+```
+
+Measured: complete after ~290 s sim (13.5 min wall at RTF ~0.36), 91.5 % of
+the reference map known, 38.6 m driven, 13 / 18 objects in the semantic map.
+
 Or in Docker:
 
 ```bash
@@ -192,5 +210,6 @@ docker run --rm semantic_nav
 - [x] M4 — projection: depth + intrinsics + TF → map-frame observations
 - [x] M5 — semantic map: association, confirmation, services, save/load
 - [x] M6 — commander: GoTo service, goal generation, Nav2, CLI and voice
+- [x] M7 — autonomous exploration: frontiers + camera coverage, semantic map without teleop
 
 Problems encountered and their fixes are logged in [docs/PROBLEMS_LOG.md](docs/PROBLEMS_LOG.md).
