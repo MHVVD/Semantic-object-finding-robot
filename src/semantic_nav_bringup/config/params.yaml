@@ -94,7 +94,40 @@ semantic_map_node:
 commander_node:
   ros__parameters:
     use_sim_time: true
+    goto_service: /semantic_nav/go_to
+    cancel_service: /semantic_nav/cancel
     list_objects_service: /semantic_nav/list_objects
     nav_action_name: navigate_to_pose
-    standoff_distance_m: 0.8
+    plan_action_name: compute_path_to_pose
+    costmap_topic: /global_costmap/costmap_raw
     goal_frame: map
+    robot_frame: base_link
+    # First radius = the standoff distance; the others are fallbacks when no
+    # valid pose exists at 0.8 m (furniture all around, object in a corner).
+    standoff_radii_m: [0.8, 1.0, 1.2, 0.6]
+    num_samples: 24                 # one candidate every 15 deg
+    max_goal_cost: 200              # stay out of the strongest inflation (253 = inscribed)
+    max_detour_factor: 1.5          # local free space: reachable within 1.5 x radius
+    cost_weight: 1.0                # a cost-252 cell counts like 1 m of extra distance
+    candidates_per_object: 3        # planner calls per instance
+    # Ignore instances seen < 25 % as often as the best-seen one of that label:
+    # removes phantom beds / chairs from consistent detector mistakes (M5).
+    min_relative_evidence: 0.25
+    label_aliases: ['fridge=refrigerator', 'sofa=couch', 'television=tv', 'telly=tv',
+                    'plant=potted plant', 'table=dining table', 'loo=toilet']
+    server_timeout_s: 5.0
+    feedback_period_s: 5.0
+
+voice_command:
+  ros__parameters:
+    use_sim_time: true
+    model_path: ~/semantic_nav_data/models/vosk-model-small-en-us-0.15
+    audio_device: default
+    input_wav: ""                   # set to a .wav to test without a microphone
+    sample_rate: 16000
+    # Everything the user may say: COCO labels in the house + the aliases above.
+    names: [refrigerator, fridge, couch, sofa, tv, television, chair, bed, toilet, sink,
+            potted plant, plant, dining table, table]
+    goto_service: /semantic_nav/go_to
+    cancel_service: /semantic_nav/cancel
+    heard_topic: /semantic_nav/voice/heard
