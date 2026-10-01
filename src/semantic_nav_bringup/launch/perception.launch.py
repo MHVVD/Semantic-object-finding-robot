@@ -13,16 +13,19 @@
 # limitations under the License.
 
 """
-Run the YOLO detector (and optionally the dataset recorder) on a running simulation.
+Run the perception nodes (detector, projector, optional dataset recorder) on a running sim.
 
 Start the robot first (sim.launch.py, slam.launch.py or navigation.launch.py);
 the detector subscribes to the OAK-D RGB topic and publishes
 /semantic_nav/detections and /semantic_nav/detections_image (shown in the
-"Detections" panel of rviz/sim.rviz and rviz/nav.rviz).
+"Detections" panel of rviz/sim.rviz and rviz/nav.rviz); the projector turns
+them into map-frame observations (/semantic_nav/observations) and markers
+(/semantic_nav/observation_markers, "Observations" display in RViz).
 
 Launch arguments:
     params_file  Parameter YAML (default: config/params.yaml).
     detector     Start detector_node (default: true).
+    projector    Start projector_node (default: true).
     capture      Also start capture_frames, which writes RGB frames (+ ground-truth
                  labels when the sim runs with gt_boxes:=true) to the output_dir
                  set in params_file (default: false).
@@ -45,10 +48,14 @@ def generate_launch_description():
         DeclareLaunchArgument('params_file',
                               default_value=os.path.join(pkg, 'config', 'params.yaml')),
         DeclareLaunchArgument('detector', default_value='true', choices=['true', 'false']),
+        DeclareLaunchArgument('projector', default_value='true', choices=['true', 'false']),
         DeclareLaunchArgument('capture', default_value='false', choices=['true', 'false']),
         Node(package='semantic_nav_perception', executable='detector_node',
              name='detector_node', output='screen', parameters=[params],
              condition=IfCondition(LaunchConfiguration('detector'))),
+        Node(package='semantic_nav_perception', executable='projector_node',
+             name='projector_node', output='screen', parameters=[params],
+             condition=IfCondition(LaunchConfiguration('projector'))),
         Node(package='semantic_nav_perception', executable='capture_frames',
              name='capture_frames', output='screen', parameters=[params],
              condition=IfCondition(LaunchConfiguration('capture'))),

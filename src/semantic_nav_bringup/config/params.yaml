@@ -50,8 +50,21 @@ projector_node:
     depth_topic: /oakd/rgb/preview/depth
     camera_info_topic: /oakd/rgb/preview/camera_info
     output_topic: /semantic_nav/observations
+    markers_topic: /semantic_nav/observation_markers
     target_frame: map
-    max_depth_m: 4.0
+    # Depth = median of the valid pixels in the central bbox_shrink x bbox_shrink
+    # part of the box: the box edges are mostly background (walls behind a chair).
+    bbox_shrink: 0.5
+    min_depth_m: 0.3          # camera near clip
+    max_depth_m: 4.0          # beyond this depth noise / tiny boxes dominate
+    min_valid_fraction: 0.2
+    # Detector output, depth and camera_info carry identical stamps in sim; the slop
+    # only has to absorb jitter on real hardware. Queue covers the detector latency
+    # (~60-90 ms) at 10 Hz depth.
+    sync_queue_size: 10
+    sync_slop_s: 0.02
+    tf_timeout_s: 0.2
+    marker_lifetime_s: 1.0
 
 semantic_map_node:
   ros__parameters:
