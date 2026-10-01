@@ -131,3 +131,28 @@ voice_command:
     goto_service: /semantic_nav/go_to
     cancel_service: /semantic_nav/cancel
     heard_topic: /semantic_nav/voice/heard
+
+# Autonomous exploration (exploration.launch.py explorer:=frontier).
+frontier_explorer:
+  ros__parameters:
+    use_sim_time: true
+    map_topic: /map
+    nav_action_name: navigate_to_pose
+    status_topic: /semantic_nav/exploration/status
+    markers_topic: /semantic_nav/exploration/markers
+    map_frame: map
+    robot_frame: base_link
+    clearance_m: 0.25            # robot radius 0.19 m + margin
+    min_frontier_m: 0.3          # ignore slivers of unknown (doorway jambs, noise)
+    gain_weight: 1.0             # 1 m of frontier is worth 1 m of driving
+    decision_period_s: 1.0
+    progress_timeout_s: 20.0     # stuck -> cancel and blacklist
+    blacklist_radius_m: 0.5
+    camera_coverage: true        # phase 2: look at every surface with the camera
+    camera_hfov_rad: 1.25        # the OAK-D in the URDF
+    camera_range_m: 3.0          # detector + depth are reliable to ~3 m (M3/M4)
+    coverage_tile_m: 1.0
+    min_unseen_cells: 6          # 0.3 m of unseen surface at 5 cm cells
+    view_min_m: 1.0
+    view_max_m: 2.5
+    return_to_start: true
