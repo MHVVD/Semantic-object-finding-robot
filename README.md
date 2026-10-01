@@ -149,6 +149,33 @@ ros2 service call /semantic_nav/save_map semantic_nav_interfaces/srv/MapFile "{p
 ros2 run semantic_nav_bringup semantic_map_eval.py --map ~/semantic_nav_data/semantic_map.yaml
 ```
 
+### Commander and voice (Milestone 6)
+
+`commander_node` serves `/semantic_nav/go_to` (`GoTo`): it looks the object up
+in the semantic map, generates standoff goals around each instance (rejecting
+lethal / inscribed / unknown costmap cells and points outside the object's
+local free space), picks the instance with the shortest *planned* path, sends
+`NavigateToPose` and answers when the robot has arrived. `/semantic_nav/cancel`
+stops it. Aliases: fridge, sofa, television, plant, table, loo.
+
+Voice: `voice_command` listens on the default microphone (`arecord`) and runs
+Vosk offline speech recognition restricted to commands such as "go to the
+fridge", "take me to the sofa", "find the toilet", "stop".
+
+```bash
+# one-time: offline speech recognition (numpy pinned as for OpenVINO)
+pip install --user --break-system-packages -c /tmp/np.txt vosk
+mkdir -p ~/semantic_nav_data/models && cd ~/semantic_nav_data/models
+curl -LO https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip && unzip vosk-model-small-en-us-0.15.zip
+
+ros2 launch semantic_nav_bringup navigation.launch.py
+ros2 launch semantic_nav_bringup perception.launch.py
+ros2 launch semantic_nav_bringup commander.launch.py voice:=true   # then just say it
+ros2 run semantic_nav_commander go_to fridge                       # or type it
+ros2 run semantic_nav_commander go_to --list
+ros2 run semantic_nav_commander go_to --cancel
+```
+
 Or in Docker:
 
 ```bash
@@ -164,6 +191,6 @@ docker run --rm semantic_nav
 - [x] M3 — detection: YOLO11n → ONNX → OpenVINO, evaluated per class
 - [x] M4 — projection: depth + intrinsics + TF → map-frame observations
 - [x] M5 — semantic map: association, confirmation, services, save/load
-- [ ] Commander + Nav2
+- [x] M6 — commander: GoTo service, goal generation, Nav2, CLI and voice
 
 Problems encountered and their fixes are logged in [docs/PROBLEMS_LOG.md](docs/PROBLEMS_LOG.md).
