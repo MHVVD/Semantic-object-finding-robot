@@ -15,7 +15,7 @@
 """Smoke tests: the generated Python types exist and have the agreed fields."""
 
 from semantic_nav_interfaces.msg import SemanticObject, SemanticObjectArray
-from semantic_nav_interfaces.srv import GoTo, ListObjects
+from semantic_nav_interfaces.srv import GoTo, ListObjects, MapFile
 
 
 def test_semantic_object_fields():
@@ -49,3 +49,10 @@ def test_list_objects_service_shape():
     assert req.label_filter == ''  # empty filter means "all"
     res = ListObjects.Response(objects=[SemanticObject(label='sink')])
     assert res.objects[0].label == 'sink'
+
+
+def test_map_file_service_shape():
+    req = MapFile.Request()
+    assert req.path == ''  # empty path means "the node's map_file parameter"
+    res = MapFile.Response(success=True, message='saved', object_count=14)
+    assert res.success and res.object_count == 14
