@@ -94,11 +94,6 @@ def yaw_to_quaternion(yaw):
     return (0.0, 0.0, math.sin(yaw / 2.0), math.cos(yaw / 2.0))
 
 
-def quaternion_to_yaw(x, y, z, w):
-    """Yaw of a quaternion (exact for pure-yaw rotations)."""
-    return math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
-
-
 def local_free_space(grid, object_xy, max_dist, seed_search=1.0):
     """
     Geodesic distances (metres) from the object's nearest free cells, up to max_dist.

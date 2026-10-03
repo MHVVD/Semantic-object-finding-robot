@@ -38,6 +38,8 @@ Parameters (config/params.yaml, section capture_frames):
     class_names_path                  (string) YAML with class_names (model's .yaml)
     min_period_s, min_translation_m, min_rotation_rad   (double) save gating
     map_frame, base_frame             (string) frames for the pose in frames.csv
+    max_pending                       (int)    unmatched image / gt messages kept
+                                               while waiting for the partner
     use_sim_time                      (bool)
 """
 
@@ -70,8 +72,8 @@ PARAMETERS = {
     'min_rotation_rad': Parameter.Type.DOUBLE,
     'map_frame': Parameter.Type.STRING,
     'base_frame': Parameter.Type.STRING,
+    'max_pending': Parameter.Type.INTEGER,
 }
-MAX_PENDING = 30  # unmatched image / gt messages kept while waiting for the partner
 
 
 def stamp_key(msg):
@@ -129,7 +131,7 @@ class CaptureFrames(Node):
         for key in sorted(set(self.images) & set(self.gts)):
             self.consider(self.images.pop(key), self.gts.pop(key))
         for pending in (self.images, self.gts):
-            for key in sorted(pending)[:-MAX_PENDING]:
+            for key in sorted(pending)[:-self.p['max_pending']]:
                 del pending[key]
 
     def robot_pose(self):

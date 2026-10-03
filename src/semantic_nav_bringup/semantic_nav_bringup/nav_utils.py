@@ -46,13 +46,6 @@ def world_to_map(x, y, yaw, spawn):
     return (c * dx - s * dy, s * dx + c * dy, wrap_angle(yaw - syaw))
 
 
-def map_to_world(x, y, yaw, spawn):
-    """Inverse of world_to_map."""
-    sx, sy, syaw = spawn
-    c, s = math.cos(syaw), math.sin(syaw)
-    return (sx + c * x - s * y, sy + s * x + c * y, wrap_angle(yaw + syaw))
-
-
 def go_to_point(pose, target, v_max, w_max, k_w=1.5, turn_in_place=0.5):
     """
     Proportional go-to-point controller for a differential-drive robot.
