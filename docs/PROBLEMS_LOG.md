@@ -131,3 +131,14 @@ Milestone reports pull their "Problems and fixes" section from here.
 | 82 | Replay analysis during a trial printed "[ros2run]: Killed" | It was started with `ros2 run` (an install/ path) while the trial's `stop_all` ran `pkill -f semantic_ws/install/` (#40 again). | Run analyses from the source path, or after the trials. |
 | 83 | Evaluation table said "0.00 m outside the gate" for duplicates; variance printed as 0.00 | Wrong wording for "same class, already matched"; fixed-decimal formatting hid variances < 0.005. | "duplicate of X (already matched)" vs "displaced"; variances printed to 3 significant digits. |
 | 84 | Nested bullet lists printed flat in the PDF reports (M0–M8) | Python-Markdown needs 4-space nesting; the reports use GitHub-style 2 spaces, and an outer item after a nested one was absorbed into it. | `md2pdf.py` doubles leading indentation outside code (fences inside list items move with them) and separates items that return to an outer list; all reports re-rendered. |
+
+## M9 — Portfolio polish
+
+| # | Symptom | Root cause | Fix |
+|---|---------|-----------|-----|
+| 85 | A fresh clone has no detector model: the quickstart would crash at `detector_node` | Models are gitignored (Ultralytics weights are AGPL-3.0; binaries) and were exported by hand in M3 | Docker `model` stage downloads YOLO11n and exports ONNX + class names at build time; only those two files reach the demo image |
+| 86 | Demo image build failed after 27 min: `pip: command not found` | `osrf/ros:jazzy-desktop-full` ships no pip; only a fresh-clone build shows it | Install `python3-pip`; OpenVINO in its own layer |
+| 87 | Any code change re-ran the 27-min dependency layer | `COPY src/` came before `rosdep install` | Copy the five `package.xml` files first, the sources after |
+| 88 | CI's docker job would have built the full demo image (Gazebo, Nav2, PyTorch) | `docker build .` builds the LAST stage, which became `demo` | `docker build --target test` |
+| 89 | Docker demo: Gazebo crashed (exit 139) right after the robot spawned | With all of `/dev/dri` passed through on this hybrid laptop, EGL picked the NVIDIA node (`card2`, vendor 0x10de), which has no driver in the container: "eglInitialize failed", then "OpenGL 3.3 is not supported", then a segfault. Tested with a camera world: software rendering OK, Intel `renderD128` alone OK, all of `/dev/dri` crashes | Default compose: no devices (software rendering, works anywhere); opt-in `docker-compose.gpu.yml` passes ONE render node (`GPU_RENDER_NODE`) |
+| 90 | After that crash the demo container hung forever | `demo.sh` waited for the monitor, which waits for an explorer "complete" that never comes | `wait -n` on the launch and the monitor: if the stack exits first, print its first errors and exit 1 |

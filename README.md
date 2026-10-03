@@ -89,8 +89,9 @@ DEMO_OBJECTS="refrigerator,couch" docker compose up demo         # pick the obje
 docker compose up --build test                                   # the unit + lint tests (CI)
 ```
 
-No `/dev/dri` on your machine? Delete the `devices:` lines in `docker-compose.yml`.
-Gazebo then renders the camera in software, which is slower.
+The camera is rendered in software by default, which works on any machine. On an Intel or AMD
+GPU, add `-f docker-compose.yml -f docker-compose.gpu.yml` for faster rendering (see that file).
+The first run also downloads the furniture models from Gazebo Fuel (~70 MB, cached in a volume).
 
 ### Native install (Ubuntu 24.04 + ROS 2 Jazzy)
 
