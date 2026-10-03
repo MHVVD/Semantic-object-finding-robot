@@ -62,6 +62,13 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir --break-system-packages "openvino==2026.4.0" "numpy<2"
 
+# Furniture models from Gazebo Fuel, baked in. Downloading them at first launch takes
+# minutes, and the Create3 controller spawners give up after 30 s (PROBLEMS_LOG #91).
+COPY src/semantic_nav_bringup/worlds/house.sdf /tmp/house.sdf
+RUN source /opt/ros/jazzy/setup.bash \
+    && grep -o 'https://fuel[^<"]*' /tmp/house.sdf | sort -u \
+       | while read -r uri; do gz fuel download -u "$uri" || exit 1; done
+
 COPY src/ src/
 COPY --from=model /models/ src/semantic_nav_perception/models/
 

@@ -91,7 +91,6 @@ docker compose up --build test                                   # the unit + li
 
 The camera is rendered in software by default, which works on any machine. On an Intel or AMD
 GPU, add `-f docker-compose.yml -f docker-compose.gpu.yml` for faster rendering (see that file).
-The first run also downloads the furniture models from Gazebo Fuel (~70 MB, cached in a volume).
 
 ### Native install (Ubuntu 24.04 + ROS 2 Jazzy)
 
