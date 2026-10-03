@@ -13,54 +13,52 @@
 # limitations under the License.
 
 """
-Launch the four semantic-navigation nodes with the shared parameter file.
+The whole robot in a KNOWN house: simulation + Nav2/AMCL + perception + commander.
 
-Simulation (Gazebo, SLAM, Nav2) is launched separately; later milestones add
-sim/slam/nav launch files that include this one.
+Starts:
+    navigation.launch.py   gz sim, map_server (maps/house.yaml), AMCL, Nav2, RViz
+    perception.launch.py   detector -> projector -> semantic map
+    commander.launch.py    GoTo service (+ voice front end with voice:=true)
+The semantic map starts empty (or from map_file with load_on_start in params.yaml)
+and fills as the robot drives; then:
+    ros2 run semantic_nav_commander go_to fridge
+For an UNKNOWN house use exploration.launch.py instead.
 
 Launch arguments:
-    params_file   Path to the parameter YAML (default: config/params.yaml).
-    use_sim_time  Use the /clock topic from Gazebo (default: true).
+    headless   Passed to the simulation (default: true).
+    rviz       Start RViz with rviz/nav.rviz (default: true).
+    voice      Also start the voice front end (default: false).
+
+Note: launch configurations are global across included files, so every include
+gets its parameter file passed explicitly (navigation.launch.py's params_file is
+the Nav2 file; see PROBLEMS_LOG #71).
 """
 
 import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
-
-NODES = [
-    ('semantic_nav_perception', 'detector_node'),
-    ('semantic_nav_perception', 'projector_node'),
-    ('semantic_nav_mapping', 'semantic_map_node'),
-    ('semantic_nav_commander', 'commander_node'),
-]
 
 
 def generate_launch_description():
-    default_params = os.path.join(
-        get_package_share_directory('semantic_nav_bringup'), 'config', 'params.yaml')
-    params_file = LaunchConfiguration('params_file')
-    use_sim_time = LaunchConfiguration('use_sim_time')
+    pkg = get_package_share_directory('semantic_nav_bringup')
+    params = os.path.join(pkg, 'config', 'params.yaml')
 
-    nodes = [
-        Node(
-            package=package,
-            executable=executable,
-            name=executable,
-            output='screen',
-            # The launch-level override comes last so it wins over the YAML.
-            parameters=[params_file, {'use_sim_time': use_sim_time}],
-        )
-        for package, executable in NODES
-    ]
+    def include(launch_file, **arguments):
+        return IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(os.path.join(pkg, 'launch', launch_file)),
+            launch_arguments=arguments.items())
 
     return LaunchDescription([
-        DeclareLaunchArgument('params_file', default_value=default_params,
-                              description='Full path to the parameter YAML file'),
-        DeclareLaunchArgument('use_sim_time', default_value='true',
-                              description='Use simulation (Gazebo) clock'),
-        *nodes,
+        DeclareLaunchArgument('headless', default_value='true', choices=['true', 'false']),
+        DeclareLaunchArgument('rviz', default_value='true', choices=['true', 'false']),
+        DeclareLaunchArgument('voice', default_value='false', choices=['true', 'false']),
+        include('navigation.launch.py', headless=LaunchConfiguration('headless'),
+                rviz=LaunchConfiguration('rviz'),
+                params_file=os.path.join(pkg, 'config', 'nav2_params.yaml')),
+        include('perception.launch.py', params_file=params),
+        include('commander.launch.py', params_file=params, voice=LaunchConfiguration('voice')),
     ])
