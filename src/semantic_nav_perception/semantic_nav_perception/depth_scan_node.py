@@ -28,10 +28,11 @@ Role:
 
     In nav2_params.yaml the scan feeds its OWN obstacle layer (depth_layer) in
     the LOCAL costmap: the lidar's beams pass under the table, and in a shared
-    layer their clearing would erase the table top again. +inf beams do not
-    clear (inf_is_valid false): close to a table its top leaves the camera's
-    view, which must not mean "gone". Not in the global costmap: marks there
-    never expire, and stale ones closed doorways in a long SLAM run (#95).
+    layer their clearing would erase the table top again. +inf beams (nothing
+    in the band) do clear (inf_is_valid true): otherwise marks in front of a
+    stopped robot never go away (#96). The table top is visible from ~1.2 m,
+    so the robot stops before it leaves the view. Not in the global costmap:
+    marks there persisted and closed passages in a long SLAM run (#95).
 
     The camera is fixed on the robot, so target_frame <- camera is looked up once
     (latest) and cached; the scan carries the depth image's stamp, and Nav2 places

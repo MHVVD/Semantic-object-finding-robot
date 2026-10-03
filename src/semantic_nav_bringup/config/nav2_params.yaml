@@ -280,8 +280,9 @@ local_costmap:
       depth_layer:
         # Table tops / chair seats from the depth camera (depth_scan_node), LOCAL costmap
         # only. A separate layer, so the lidar's clearing (it sees under the table)
-        # cannot erase them; +inf beams don't clear: near a table its top is out of
-        # view, not gone. The rolling window forgets them once the robot moves on.
+        # cannot erase them. +inf beams ("nothing in the band") DO clear: otherwise marks
+        # in front of a stopped robot never go away ("collision ahead", #96). The table
+        # top is visible from ~1.2 m, so the robot stops before it leaves the view.
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         observation_sources: depth_scan
@@ -291,7 +292,7 @@ local_costmap:
           clearing: True
           marking: True
           data_type: "LaserScan"
-          inf_is_valid: False
+          inf_is_valid: True
           raytrace_max_range: 3.0
           raytrace_min_range: 0.0
           obstacle_max_range: 3.0
