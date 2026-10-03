@@ -47,7 +47,7 @@ Parameters (config/params.yaml, section frontier_explorer):
     min_frontier_m       (double) ignore frontier clusters shorter than this
     gain_weight          (double) metres of driving one metre of target is worth
     decision_period_s    (double) how often to (re)decide
-    progress_timeout_s   (double) cancel + blacklist if the robot does not move closer
+    progress_timeout_s   (double) sim s; cancel + blacklist if the robot does not move closer
     goal_timeout_s       (double) hard cap per goal (near the goal only Nav2 decides,
                          so a goal under a table could otherwise take minutes)
     coverage_budget_s    (double) sim-time budget for phase 2 (diminishing returns)
@@ -209,7 +209,7 @@ class FrontierExplorer(Node):
         (goal.pose.orientation.x, goal.pose.orientation.y,
          goal.pose.orientation.z, goal.pose.orientation.w) = q
         self.goal = {'kind': kind, 'xy': xy, 'yaw': yaw, 'handle': None, 'done': False,
-                     'best_dist': math.inf, 'last_progress': time.monotonic(),
+                     'best_dist': math.inf, 'last_progress': self.sim_now(),
                      'sent': self.sim_now()}
         self.goals_sent += 1
         self.get_logger().info(f'goal {self.goals_sent}: {kind} at ({xy[0]:.2f}, {xy[1]:.2f}), '
@@ -325,7 +325,7 @@ class FrontierExplorer(Node):
         """While navigating: abandon goals that are pointless or stuck."""
         g = self.goal
         d = math.hypot(g['xy'][0] - pose[0], g['xy'][1] - pose[1])
-        now = time.monotonic()
+        now = self.sim_now()
         if d < g['best_dist'] - self.p['progress_step_m'] or d < self.p['near_goal_m']:
             # Near the goal the robot only turns to the final heading: distance no
             # longer shrinks, but that is not "stuck" -- Nav2 will finish or abort.
