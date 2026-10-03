@@ -123,6 +123,7 @@ Every command, per subsystem, including voice control: [docs/USAGE.md](docs/USAG
 | `commander_node` | `ListObjects`, `/global_costmap/costmap_raw`, TF | service `/semantic_nav/go_to` (`GoTo`), `/semantic_nav/cancel`; actions `ComputePathToPose`, `NavigateToPose` |
 | `voice_command` | microphone (Vosk, offline, restricted grammar) | calls `go_to` / `cancel`; `/semantic_nav/voice/heard` |
 | `frontier_explorer` | `/map`, TF | `NavigateToPose` goals; `/semantic_nav/exploration/status` |
+| `depth_scan_node` | `/oakd/rgb/preview/depth` + `camera_info`, TF | `/depth_scan` (`LaserScan` of obstacles 0.05–1 m high) for a separate layer in Nav2's local costmap |
 
 **TF tree.** `map → odom` comes from slam_toolbox or AMCL. `odom → base_link` comes from the wheel odometry.
 `base_link → … → oakd_rgb_camera_optical_frame` comes from the URDF (fixed).
@@ -151,6 +152,8 @@ Detections are deprojected in the optical frame, then transformed to `map` with 
   - Per-class gates: beds and sofas are 2 m long.
   - A running mean, and confirmation after N sightings with a timeout for tentative tracks.
   - Atomic YAML save and load.
+- **Depth camera in the costmap.** A height-filtered scan from the depth image (table tops,
+  chair seats) feeds its own layer in the local costmap, so the lidar cannot clear it.
 - **Goal generation on the costmap.** Candidate poses on circles around the object. It rejects
   lethal, inscribed and unknown cells, and points that are only reachable "through the wall".
   The robot faces the object, and the nearest instance is chosen by *planned path length*.
@@ -172,10 +175,10 @@ Detections are deprojected in the optical frame, then transformed to `map` with 
   - Repeated-run statistics and auto-generated plots.
 - **Engineering.**
   - Parameters live in YAML; nodes have no hard-coded defaults.
-  - 294 tests: unit tests for all the maths (deprojection, association, goal generation,
+  - 301 tests: unit tests for all the maths (deprojection, association, goal generation,
     frontiers, scoring) plus flake8, pep257 and copyright lint.
   - CI on GitHub Actions, and a reproducible Docker image.
-  - A problems log with 84 entries.
+  - A problems log with 97 entries.
 
 ## Design decisions
 
@@ -201,8 +204,10 @@ Detections are deprojected in the optical frame, then transformed to `map` with 
   every viewpoint, and the commander then drives confidently to the wrong place.
 - **The evidence filter is fragile.** "Ignore instances seen < 25 % as often as the best one"
   once discarded the *real* couch because a phantom had more sightings.
-- **2D only.** The lidar sees table legs, not tabletops, so the robot can get stuck under a table.
-  The depth camera does not feed the costmap.
+- **Mostly 2D.** The lidar sees table legs, not tabletops, so the robot can get stuck under a table.
+  Since M9 a `depth_scan_node` puts what the camera sees (0.05–1 m high) into its own layer of
+  the *local* costmap, so the robot stops at a table it is looking at. The global planner still
+  cannot see table tops. A 3D voxel layer would be the full fix.
 - **Simulation only.** It uses one house, perfect depth and known textures; the numbers will be
   worse on a real robot.
 - **Three runs.** The 95 % interval on the mean GoTo success is about ±36 points. That is enough
@@ -218,7 +223,8 @@ Ordered by measured impact on GoTo success:
    lose belief. This removes the consistent phantoms behind 13 of the 17 failures.
 3. **Fine-tune the detector on robot-height views.** The capture tool and the Colab notebook
    already exist (`tools/finetune_yolo_colab.ipynb`). Alternatively, mount the camera higher.
-4. **Depth camera in the Nav2 costmap** (voxel layer), so tables count as obstacles.
+4. **Full 3D costmap** (voxel layer from the depth camera). The M9 `depth_scan_node` is the
+   cheap 2D version of this.
 5. **A real TurtleBot 4.** Discovery server and QoS tuning, camera calibration, a measured
    ground truth, and the same benchmark.
 6. **Open-vocabulary detection** (e.g. YOLO-World or CLIP features) and a 3D scene graph:
@@ -241,7 +247,7 @@ docs/                         architecture diagram, usage by milestone, problems
 ## Development
 
 ```bash
-colcon test && colcon test-result --verbose     # 294 tests
+colcon test && colcon test-result --verbose     # 301 tests
 tools/ci_local.sh                               # the CI job, in the same container, on a clean tree
 tools/run_benchmarks.sh 1 3 && python3 tools/make_results.py   # reproduce the results (~2 h)
 ```
