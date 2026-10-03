@@ -20,6 +20,7 @@ Starts everything:
     * slam_toolbox online async (builds /map and map -> odom from scratch)
     * Nav2 navigation servers (planner, controller, BT navigator, ...) WITHOUT
       map_server / AMCL: the map comes from SLAM and grows as the robot explores
+    * depth_scan_node: the depth camera as a second costmap sensor (table tops)
     * perception.launch.py: detector, projector, semantic map
     * the explorer, which sends NavigateToPose goals to frontiers until none are
       left (see the M7 report), then returns to the start
@@ -63,6 +64,8 @@ def generate_launch_description():
                    params_file=LaunchConfiguration('nav2_params'))
     params = os.path.join(pkg, 'config', 'params.yaml')
     perception = include('perception.launch.py', pkg, params_file=params)
+    depth_scan = Node(package='semantic_nav_perception', executable='depth_scan_node',
+                      name='depth_scan_node', output='screen', parameters=[params])
     frontier = Node(package='semantic_nav_bringup', executable='frontier_explorer.py',
                     name='frontier_explorer', output='screen', parameters=[params],
                     condition=LaunchConfigurationEquals('explorer', 'frontier'))
@@ -82,5 +85,5 @@ def generate_launch_description():
         DeclareLaunchArgument('rviz', default_value='true', choices=['true', 'false']),
         DeclareLaunchArgument('nav2_params',
                               default_value=os.path.join(pkg, 'config', 'nav2_params.yaml')),
-        slam, nav2, perception, frontier, explore_lite, rviz,
+        slam, nav2, depth_scan, perception, frontier, explore_lite, rviz,
     ])

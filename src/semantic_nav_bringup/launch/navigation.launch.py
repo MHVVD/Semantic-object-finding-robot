@@ -17,6 +17,7 @@ Navigate in the saved house map: Nav2 + AMCL localization on top of the simulati
 
 Starts (via nav2_bringup/bringup_launch.py, slam:=False):
     map_server (maps/house.yaml) + amcl            -> map -> odom transform
+    depth_scan_node (semantic_nav_perception)      -> /depth_scan for the costmaps
     planner_server, controller_server, smoother_server, behavior_server,
     bt_navigator, waypoint_follower, velocity_smoother, collision_monitor,
     route_server, docking_server, lifecycle managers
@@ -66,6 +67,11 @@ def generate_launch_description():
             'autostart': 'True',
         }.items())
 
+    # The depth camera as a second costmap sensor (table tops; nav2_params depth_layer).
+    depth_scan = Node(package='semantic_nav_perception', executable='depth_scan_node',
+                      name='depth_scan_node', output='screen',
+                      parameters=[os.path.join(pkg, 'config', 'params.yaml')])
+
     rviz = Node(package='rviz2', executable='rviz2', output='log',
                 arguments=['-d', os.path.join(pkg, 'rviz', 'nav.rviz')],
                 parameters=[{'use_sim_time': True}],
@@ -79,5 +85,5 @@ def generate_launch_description():
         DeclareLaunchArgument('map', default_value=os.path.join(pkg, 'maps', 'house.yaml')),
         DeclareLaunchArgument('params_file',
                               default_value=os.path.join(pkg, 'config', 'nav2_params.yaml')),
-        sim, nav2, rviz,
+        sim, nav2, depth_scan, rviz,
     ])

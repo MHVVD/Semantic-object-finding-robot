@@ -256,9 +256,9 @@ local_costmap:
       height: 3
       resolution: 0.05
       robot_radius: 0.19   # TUNED: Create3 radius 0.1705 m + 2 cm margin (was 0.22, a TB3-sized guess)
-      # TUNED: 2D ObstacleLayer instead of the 3D VoxelLayer - the only obstacle sensor
-      # is a planar lidar, so voxels add CPU cost and no information.
-      plugins: ["obstacle_layer", "inflation_layer"]
+      # TUNED: 2D ObstacleLayers instead of the 3D VoxelLayer: the lidar is planar and the
+      # depth camera arrives pre-flattened as /depth_scan (M9), so voxels add only CPU.
+      plugins: ["obstacle_layer", "depth_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 4.0   # TUNED (3.0): steeper decay so 0.9 m doorways stay cheap
@@ -277,6 +277,24 @@ local_costmap:
           raytrace_min_range: 0.0
           obstacle_max_range: 2.5
           obstacle_min_range: 0.0
+      depth_layer:
+        # Table tops / chair seats from the depth camera (depth_scan_node). A separate
+        # layer, so the lidar's clearing (it sees under the table) cannot erase them;
+        # +inf beams don't clear: near a table its top is out of view, not gone.
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: True
+        observation_sources: depth_scan
+        depth_scan:
+          topic: /depth_scan
+          max_obstacle_height: 2.0
+          clearing: True
+          marking: True
+          data_type: "LaserScan"
+          inf_is_valid: False
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 3.0
+          obstacle_min_range: 0.0
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
@@ -292,7 +310,7 @@ global_costmap:
       robot_radius: 0.19   # TUNED: Create3 radius 0.1705 m + 2 cm margin (was 0.22, a TB3-sized guess)
       resolution: 0.05
       track_unknown_space: true
-      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      plugins: ["static_layer", "obstacle_layer", "depth_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -306,6 +324,24 @@ global_costmap:
           raytrace_max_range: 3.0
           raytrace_min_range: 0.0
           obstacle_max_range: 2.5
+          obstacle_min_range: 0.0
+      depth_layer:
+        # Table tops / chair seats from the depth camera (depth_scan_node). A separate
+        # layer, so the lidar's clearing (it sees under the table) cannot erase them;
+        # +inf beams don't clear: near a table its top is out of view, not gone.
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: True
+        observation_sources: depth_scan
+        depth_scan:
+          topic: /depth_scan
+          max_obstacle_height: 2.0
+          clearing: True
+          marking: True
+          data_type: "LaserScan"
+          inf_is_valid: False
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 3.0
           obstacle_min_range: 0.0
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
