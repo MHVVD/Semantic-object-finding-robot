@@ -28,7 +28,3 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ./demo_output:/out
-      - gz_fuel:/root/.gz       # Gazebo Fuel furniture models: downloaded once (~70 MB)
-
-volumes:
-  gz_fuel:
