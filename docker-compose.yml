@@ -5,6 +5,8 @@
 #
 # RViz: allow local X connections once (`xhost +local:docker`), then
 #   RVIZ=true docker compose up --build demo
+# Faster camera rendering on an Intel / AMD GPU (default: software rendering, works anywhere):
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up --build demo
 # Results (exploration CSV, semantic map YAML, scores) land in ./demo_output/.
 services:
   test:
@@ -24,7 +26,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ./demo_output:/out
-    # Gazebo renders the camera with the GPU if /dev/dri exists (much faster than
-    # software rendering). Delete these two lines on machines without it.
-    devices:
-      - /dev/dri:/dev/dri
+      - gz_fuel:/root/.gz       # Gazebo Fuel furniture models: downloaded once (~70 MB)
+
+volumes:
+  gz_fuel:

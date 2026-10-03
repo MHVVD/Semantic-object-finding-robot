@@ -1,0 +1,12 @@
+# Opt-in GPU rendering for the demo's camera (Gazebo / OGRE2 over EGL):
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up --build demo
+#
+# Pass ONE render node of an Intel or AMD GPU (Mesa drivers are in the image). Do not
+# pass all of /dev/dri on a hybrid laptop: EGL then tries the NVIDIA node, which has no
+# driver in the container, and Gazebo crashes (PROBLEMS_LOG #89). Find your node with
+#   for d in /sys/class/drm/renderD*/device; do echo $d $(cat $d/vendor); done
+# (0x8086 = Intel, 0x1002 = AMD) and set GPU_RENDER_NODE if it is not renderD128.
+services:
+  demo:
+    devices:
+      - ${GPU_RENDER_NODE:-/dev/dri/renderD128}:/dev/dri/renderD128
