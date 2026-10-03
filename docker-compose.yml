@@ -23,6 +23,8 @@ services:
       - RVIZ=${RVIZ:-false}
       - DEMO_OBJECTS=${DEMO_OBJECTS:-toilet,potted plant,tv}
       - DEMO_OUT=/out
+      - HOST_UID=${HOST_UID:-1000}   # owner of ./demo_output afterwards (`id -u`)
+      - HOST_GID=${HOST_GID:-1000}
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ./demo_output:/out
