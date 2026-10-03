@@ -1,0 +1,46 @@
+// System architecture. Render: dot -Tsvg docs/architecture.dot -o docs/architecture.svg
+digraph semantic_nav {
+  graph [rankdir=LR, fontname="Helvetica", fontsize=11, nodesep=0.35, ranksep=0.55,
+         bgcolor="white", pad=0.2];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10,
+         fillcolor="#eef3fb", color="#4a6fa5"];
+  edge  [fontname="Helvetica", fontsize=8, color="#555555"];
+
+  subgraph cluster_sim {
+    label="Gazebo Harmonic (simulation)"; style="rounded,dashed"; color="#999999";
+    gz     [label="house world\nTurtleBot4: lidar,\nOAK-D RGB-D, diff drive", fillcolor="#f2f2f2", color="#888888"];
+    bridge [label="ros_gz_bridge", fillcolor="#f2f2f2", color="#888888"];
+    gz -> bridge [arrowhead=none];
+  }
+
+  subgraph cluster_nav {
+    label="Mapping & navigation"; style="rounded"; color="#bbbbbb";
+    slam  [label="slam_toolbox (explore)\nor map_server + AMCL (deploy)"];
+    nav2  [label="Nav2\nplanner, controller,\ncostmaps, BT navigator"];
+    expl  [label="frontier_explorer\nmap frontiers +\ncamera coverage"];
+  }
+
+  subgraph cluster_sem {
+    label="Semantic pipeline (this project)"; style="rounded"; color="#4a6fa5";
+    det   [label="detector_node\nYOLO11n · ONNX · OpenVINO (CPU)", fillcolor="#dbe7fb"];
+    proj  [label="projector_node\nmedian depth · pinhole · tf2", fillcolor="#dbe7fb"];
+    smap  [label="semantic_map_node\nassociation · confirmation\nsave / load", fillcolor="#dbe7fb"];
+    cmd   [label="commander_node\nGoTo: nearest reachable\ninstance · goal poses", fillcolor="#dbe7fb"];
+  }
+
+  user  [label="you\n'go to the fridge'\nCLI or voice (Vosk, offline)", shape=oval, fillcolor="#fff4d6", color="#c9a227"];
+
+  bridge -> slam  [label="/scan"];
+  bridge -> det   [label="/oakd/rgb/preview/image_raw"];
+  bridge -> proj  [label="depth + camera_info"];
+  slam   -> nav2  [label="/map, TF map→odom"];
+  slam   -> expl  [label="/map"];
+  expl   -> nav2  [label="NavigateToPose"];
+  nav2   -> bridge [label="/cmd_vel"];
+  det    -> proj  [label="/semantic_nav/detections\n(Detection2DArray)"];
+  proj   -> smap  [label="/semantic_nav/observations\n(map frame)"];
+  slam   -> proj  [label="TF map→camera\n(at the image stamp)", style=dashed];
+  smap   -> cmd   [label="ListObjects"];
+  user   -> cmd   [label="GoTo service"];
+  cmd    -> nav2  [label="ComputePathToPose\nNavigateToPose\n(+ costmap_raw)"];
+}
