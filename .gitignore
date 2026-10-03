@@ -24,3 +24,6 @@ src/semantic_nav_perception/models/
 
 # Benchmark process logs (raw CSVs and maps in results/raw/ are kept)
 results/raw/logs/
+
+# Docker demo output
+demo_output/
