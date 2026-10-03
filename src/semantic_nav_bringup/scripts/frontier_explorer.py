@@ -58,6 +58,12 @@ Parameters (config/params.yaml, section frontier_explorer):
     min_unseen_cells     (int)    ignore tiles with fewer unseen surface cells
     view_min_m, view_max_m (double) viewpoint distance from an unseen tile
     return_to_start      (bool)
+    start_tolerance_m    (double) skip the return goal if already this close to the start
+    progress_step_m      (double) "progress" = distance to the goal shrank by this much
+    near_goal_m          (double) no progress check this close to the goal (final turn)
+    revealed_radius_m    (double) a frontier goal is dropped once no frontier cell is
+                         left within this radius of it
+    coverage_update_period_s (double) camera ray-cast period
     use_sim_time         (bool)
 """
 
@@ -85,8 +91,6 @@ from std_msgs.msg import String
 from tf2_ros import Buffer, TransformException, TransformListener
 from visualization_msgs.msg import Marker, MarkerArray
 
-NEAR_GOAL_M = 0.4
-
 PARAMETERS = {
     'map_topic': Parameter.Type.STRING,
     'nav_action_name': Parameter.Type.STRING,
@@ -110,6 +114,11 @@ PARAMETERS = {
     'view_min_m': Parameter.Type.DOUBLE,
     'view_max_m': Parameter.Type.DOUBLE,
     'return_to_start': Parameter.Type.BOOL,
+    'start_tolerance_m': Parameter.Type.DOUBLE,
+    'progress_step_m': Parameter.Type.DOUBLE,
+    'near_goal_m': Parameter.Type.DOUBLE,
+    'revealed_radius_m': Parameter.Type.DOUBLE,
+    'coverage_update_period_s': Parameter.Type.DOUBLE,
 }
 
 
@@ -138,7 +147,7 @@ class FrontierExplorer(Node):
         self.nav = ActionClient(self, NavigateToPose, p['nav_action_name'])
         self.status_pub = self.create_publisher(String, p['status_topic'], latched)
         self.marker_pub = self.create_publisher(MarkerArray, p['markers_topic'], 10)
-        self.create_timer(0.5, self.update_coverage)
+        self.create_timer(p['coverage_update_period_s'], self.update_coverage)
         self.create_timer(p['decision_period_s'], self.decide)
         self.status('waiting for map, TF and Nav2')
 
@@ -317,7 +326,7 @@ class FrontierExplorer(Node):
         g = self.goal
         d = math.hypot(g['xy'][0] - pose[0], g['xy'][1] - pose[1])
         now = time.monotonic()
-        if d < g['best_dist'] - 0.1 or d < NEAR_GOAL_M:
+        if d < g['best_dist'] - self.p['progress_step_m'] or d < self.p['near_goal_m']:
             # Near the goal the robot only turns to the final heading: distance no
             # longer shrinks, but that is not "stuck" -- Nav2 will finish or abort.
             g['best_dist'], g['last_progress'] = min(d, g['best_dist']), now
@@ -330,15 +339,17 @@ class FrontierExplorer(Node):
         if g['kind'] == 'frontier':
             c, r = self.info.to_cell(*g['xy'])
             m = frontier_mask(self.map)
-            r0, r1 = max(0, r - 5), min(m.shape[0], r + 6)
-            c0, c1 = max(0, c - 5), min(m.shape[1], c + 6)
+            k = int(round(self.p['revealed_radius_m'] / self.info.resolution))
+            r0, r1 = max(0, r - k), min(m.shape[0], r + k + 1)
+            c0, c1 = max(0, c - k), min(m.shape[1], c + k + 1)
             if not m[r0:r1, c0:c1].any():
                 # The unknown space behind it has been seen already: move on.
                 self.cancel('frontier already revealed', False)
 
     def finish(self, pose):
         if self.phase == 3 and self.p['return_to_start'] and self.start_xy is not None and \
-                math.hypot(pose[0] - self.start_xy[0], pose[1] - self.start_xy[1]) > 0.5:
+                math.hypot(pose[0] - self.start_xy[0], pose[1] - self.start_xy[1]) > \
+                self.p['start_tolerance_m']:
             self.phase = 4
             self.send('return', self.start_xy, 0.0, 0.0)
             return

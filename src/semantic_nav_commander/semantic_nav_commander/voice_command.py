@@ -39,6 +39,9 @@ Parameters (config/params.yaml, section voice_command):
     sample_rate       (int)    microphone sample rate (Vosk models: 16000)
     names             (string[]) spoken object names (labels and their aliases)
     goto_service, cancel_service, heard_topic   (string)
+    chunk_s           (double) audio fed to the recogniser per read
+    discovery_settle_s (double) wait after the GoTo service appears before listening
+                      (wall s; the first reply can be lost before discovery settles)
     use_sim_time      (bool)
 """
 
@@ -68,9 +71,9 @@ PARAMETERS = {
     'goto_service': Parameter.Type.STRING,
     'cancel_service': Parameter.Type.STRING,
     'heard_topic': Parameter.Type.STRING,
+    'chunk_s': Parameter.Type.DOUBLE,
+    'discovery_settle_s': Parameter.Type.DOUBLE,
 }
-CHUNK_BYTES = 8000            # 0.25 s of 16 kHz 16-bit mono
-SETTLE_S = 0.5                # after the GoTo service appears, before listening
 
 
 class VoiceCommand(Node):
@@ -130,9 +133,10 @@ class VoiceCommand(Node):
             ['arecord', '-q', '-D', self.p['audio_device'], '-f', 'S16_LE', '-r', str(rate),
              '-c', '1', '-t', 'raw'], stdout=subprocess.PIPE)
         rec = self.recognizer(rate)
+        chunk_bytes = 2 * int(rate * self.p['chunk_s'])     # 16-bit mono
         try:
             while not self.stop_event.is_set():
-                data = proc.stdout.read(CHUNK_BYTES)
+                data = proc.stdout.read(chunk_bytes)
                 if not data:
                     raise RuntimeError('arecord produced no audio (device busy or missing?)')
                 if rec.AcceptWaveform(data):
@@ -146,7 +150,7 @@ class VoiceCommand(Node):
                 raise RuntimeError(f'{path}: need mono 16-bit PCM')
             rec = self.recognizer(w.getframerate())
             while not self.stop_event.is_set():
-                data = w.readframes(4000)
+                data = w.readframes(int(w.getframerate() * self.p['chunk_s']))
                 if not data:
                     break
                 if rec.AcceptWaveform(data):
@@ -174,7 +178,7 @@ class VoiceCommand(Node):
                                        throttle_duration_sec=10.0)
                 return
             self.ready_since = self.ready_since or time.monotonic()
-            if time.monotonic() - self.ready_since >= SETTLE_S:
+            if time.monotonic() - self.ready_since >= self.p['discovery_settle_s']:
                 self.start_listening()
             return
         while not self.commands.empty():

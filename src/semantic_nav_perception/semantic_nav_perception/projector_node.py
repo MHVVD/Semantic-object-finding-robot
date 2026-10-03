@@ -49,6 +49,7 @@ Parameters (config/params.yaml, section projector_node):
     sync_slop_s         (double) max stamp difference to pair messages
     tf_timeout_s        (double) how long to wait for the transform at the image stamp
     marker_lifetime_s   (double) RViz marker lifetime
+    stats_period_s      (double) how often the frame / projection counters are logged
     use_sim_time        (bool)
 """
 
@@ -85,6 +86,7 @@ PARAMETERS = {
     'sync_slop_s': Parameter.Type.DOUBLE,
     'tf_timeout_s': Parameter.Type.DOUBLE,
     'marker_lifetime_s': Parameter.Type.DOUBLE,
+    'stats_period_s': Parameter.Type.DOUBLE,
 }
 
 
@@ -119,7 +121,7 @@ class ProjectorNode(Node):
 
         self.counts = {'frames': 0, 'detections': 0, 'projected': 0, 'no_depth': 0,
                        'tf_fail': 0}
-        self.create_timer(10.0, self.report)
+        self.create_timer(p['stats_period_s'], self.report)
         self.get_logger().info(
             f'projecting {p["detections_topic"]} with {p["depth_topic"]} into '
             f'{p["target_frame"]} (shrink {p["bbox_shrink"]}, depth '

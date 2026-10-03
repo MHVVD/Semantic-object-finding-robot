@@ -42,6 +42,7 @@ capture_frames:
     min_rotation_rad: 0.35
     map_frame: map
     base_frame: base_link
+    max_pending: 30
 
 projector_node:
   ros__parameters:
@@ -65,6 +66,7 @@ projector_node:
     sync_slop_s: 0.02
     tf_timeout_s: 0.2
     marker_lifetime_s: 1.0
+    stats_period_s: 10.0
 
 semantic_map_node:
   ros__parameters:
@@ -131,6 +133,8 @@ voice_command:
     goto_service: /semantic_nav/go_to
     cancel_service: /semantic_nav/cancel
     heard_topic: /semantic_nav/voice/heard
+    chunk_s: 0.25                   # audio per recogniser call
+    discovery_settle_s: 0.5         # first reply is lost if we call too early (#62)
 
 # Autonomous exploration (exploration.launch.py explorer:=frontier).
 frontier_explorer:
@@ -158,3 +162,8 @@ frontier_explorer:
     view_min_m: 1.0
     view_max_m: 2.5
     return_to_start: true
+    start_tolerance_m: 0.5       # already home: no return goal
+    progress_step_m: 0.1         # distance to the goal must shrink by this to count
+    near_goal_m: 0.4             # final turn on the spot is not "stuck" (#75)
+    revealed_radius_m: 0.25      # frontier goal dropped once its frontier is gone
+    coverage_update_period_s: 0.5

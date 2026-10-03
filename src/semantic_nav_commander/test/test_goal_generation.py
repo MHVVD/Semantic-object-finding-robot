@@ -21,13 +21,19 @@ import pytest
 from semantic_nav_commander.goal_generation import (candidate_goals, CostGrid, credible_instances,
                                                     INSCRIBED, LETHAL, local_free_space,
                                                     NO_INFORMATION,
-                                                    parse_aliases, quaternion_to_yaw,
+                                                    parse_aliases,
                                                     resolve_label, yaw_to_quaternion)
 
 RES = 0.05
 N = 100                                    # 100 x 100 cells = a 5 m x 5 m room
+
 PARAMS = {'radii': [0.8], 'n_samples': 16, 'max_cost': 252, 'max_detour': 1.5,
           'cost_weight': 1.0}
+
+
+def quaternion_to_yaw(x, y, z, w):
+    """Inverse of yaw_to_quaternion (test helper)."""
+    return math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
 
 
 def make_grid(painter=None, fill=0):

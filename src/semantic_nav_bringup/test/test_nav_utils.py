@@ -20,6 +20,13 @@ import pytest
 from semantic_nav_bringup import nav_utils as nu
 
 
+def map_to_world(x, y, yaw, spawn):
+    """Inverse of nav_utils.world_to_map (test helper)."""
+    sx, sy, syaw = spawn
+    c, s = math.cos(syaw), math.sin(syaw)
+    return (sx + c * x - s * y, sy + s * x + c * y, nu.wrap_angle(yaw + syaw))
+
+
 @pytest.mark.parametrize('angle, expected', [
     (0.0, 0.0), (math.pi, math.pi), (-math.pi, math.pi), (3 * math.pi, math.pi),
     (2 * math.pi + 0.1, 0.1), (-0.1, -0.1), (7.0, 7.0 - 2 * math.pi),
@@ -51,7 +58,7 @@ def test_world_to_map_with_rotated_spawn():
 @pytest.mark.parametrize('spawn', [(0, 0, 0), (-1.0, -2.4, 0.3), (5, -5, -3.0)])
 def test_map_world_roundtrip(spawn):
     for pose in [(1.0, 2.0, 0.5), (-3.3, 1.8, 1.5708), (0.0, 0.0, -3.0)]:
-        back = nu.map_to_world(*nu.world_to_map(*pose, spawn), spawn)
+        back = map_to_world(*nu.world_to_map(*pose, spawn), spawn)
         assert back[:2] == pytest.approx(pose[:2])
         assert nu.wrap_angle(back[2] - pose[2]) == pytest.approx(0.0, abs=1e-12)
 
