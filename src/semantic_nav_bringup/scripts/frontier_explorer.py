@@ -59,7 +59,8 @@ Parameters (config/params.yaml, section frontier_explorer):
     view_min_m, view_max_m (double) viewpoint distance from an unseen tile
     return_to_start      (bool)
     start_tolerance_m    (double) skip the return goal if already this close to the start
-    progress_step_m      (double) "progress" = distance to the goal shrank by this much
+    progress_step_m      (double) "progress" = Nav2's remaining path length (straight-line
+                         distance until the first feedback) shrank by this much
     near_goal_m          (double) no progress check this close to the goal (final turn)
     revealed_radius_m    (double) a frontier goal is dropped once no frontier cell is
                          left within this radius of it
@@ -210,13 +211,24 @@ class FrontierExplorer(Node):
          goal.pose.orientation.z, goal.pose.orientation.w) = q
         self.goal = {'kind': kind, 'xy': xy, 'yaw': yaw, 'handle': None, 'done': False,
                      'best_dist': math.inf, 'last_progress': self.sim_now(),
-                     'sent': self.sim_now()}
+                     'sent': self.sim_now(), 'remaining': None}
         self.goals_sent += 1
         self.get_logger().info(f'goal {self.goals_sent}: {kind} at ({xy[0]:.2f}, {xy[1]:.2f}), '
                                f'target size {size:.1f} m')
-        future = self.nav.send_goal_async(NavigateToPose.Goal(pose=goal))
+        future = self.nav.send_goal_async(
+            NavigateToPose.Goal(pose=goal),
+            feedback_callback=lambda fb, g=self.goal: self.on_feedback(fb, g))
         future.add_done_callback(lambda f, g=self.goal: self.on_accepted(f, g))
         self.publish_markers()
+
+    def on_feedback(self, msg, goal):
+        # Distance along Nav2's current path: unlike the straight line, it also shrinks
+        # on a detour that first leads away from the goal (around a wall, via a door).
+        remaining = msg.feedback.distance_remaining
+        if remaining > 0.0:
+            if goal['remaining'] is None:          # switch from straight-line to path
+                goal['best_dist'] = math.inf
+            goal['remaining'] = remaining
 
     def on_accepted(self, future, goal):
         handle = future.result()
@@ -325,11 +337,12 @@ class FrontierExplorer(Node):
         """While navigating: abandon goals that are pointless or stuck."""
         g = self.goal
         d = math.hypot(g['xy'][0] - pose[0], g['xy'][1] - pose[1])
+        progress = g['remaining'] if g['remaining'] is not None else d
         now = self.sim_now()
-        if d < g['best_dist'] - self.p['progress_step_m'] or d < self.p['near_goal_m']:
+        if progress < g['best_dist'] - self.p['progress_step_m'] or d < self.p['near_goal_m']:
             # Near the goal the robot only turns to the final heading: distance no
             # longer shrinks, but that is not "stuck" -- Nav2 will finish or abort.
-            g['best_dist'], g['last_progress'] = min(d, g['best_dist']), now
+            g['best_dist'], g['last_progress'] = min(progress, g['best_dist']), now
         elif now - g['last_progress'] > self.p['progress_timeout_s']:
             self.cancel(f'no progress for {self.p["progress_timeout_s"]:.0f} s', True)
             return
