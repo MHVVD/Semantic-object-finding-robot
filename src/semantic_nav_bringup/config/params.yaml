@@ -164,7 +164,7 @@ frontier_explorer:
     markers_topic: /semantic_nav/exploration/markers
     map_frame: map
     robot_frame: base_link
-    clearance_m: 0.25            # robot radius 0.19 m + margin
+    clearance_m: 0.35            # robot 0.19 m + margin; no viewpoints in pockets Nav2 cannot leave (#97); doors (>= 0.88 m) stay open below 0.44
     min_frontier_m: 0.3          # ignore slivers of unknown (doorway jambs, noise)
     gain_weight: 1.0             # 1 m of frontier is worth 1 m of driving
     decision_period_s: 1.0
