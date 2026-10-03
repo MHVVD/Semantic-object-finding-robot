@@ -44,7 +44,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      # Only the "test" target: "demo" (full Gazebo + Nav2 image) is too big for CI.
       - name: Build image
-        run: docker build -t semantic_nav .
+        run: docker build --target test -t semantic_nav:test .
       - name: Run tests in image
-        run: docker run --rm semantic_nav
+        run: docker run --rm semantic_nav:test
