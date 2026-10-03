@@ -26,11 +26,12 @@ Role:
     and publishes the nearest one per bearing as a LaserScan (+inf where no
     point fell). The maths is in depth_scan.py.
 
-    In nav2_params.yaml the scan feeds its OWN obstacle layer (depth_layer):
-    the lidar's beams pass under the table, and in a shared layer their
-    clearing would erase the table top again. +inf beams do not clear
-    (inf_is_valid false): close to a table its top leaves the camera's view,
-    which must not mean "gone".
+    In nav2_params.yaml the scan feeds its OWN obstacle layer (depth_layer) in
+    the LOCAL costmap: the lidar's beams pass under the table, and in a shared
+    layer their clearing would erase the table top again. +inf beams do not
+    clear (inf_is_valid false): close to a table its top leaves the camera's
+    view, which must not mean "gone". Not in the global costmap: marks there
+    never expire, and stale ones closed doorways in a long SLAM run (#95).
 
     The camera is fixed on the robot, so target_frame <- camera is looked up once
     (latest) and cached; the scan carries the depth image's stamp, and Nav2 places
