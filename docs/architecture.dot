@@ -18,6 +18,7 @@ digraph semantic_nav {
     slam  [label="slam_toolbox (explore)\nor map_server + AMCL (deploy)"];
     nav2  [label="Nav2\nplanner, controller,\ncostmaps, BT navigator"];
     expl  [label="frontier_explorer\nmap frontiers +\ncamera coverage"];
+    dscan [label="depth_scan_node\ntable tops → costmap"];
   }
 
   subgraph cluster_sem {
@@ -33,6 +34,8 @@ digraph semantic_nav {
   bridge -> slam  [label="/scan"];
   bridge -> det   [label="/oakd/rgb/preview/image_raw"];
   bridge -> proj  [label="depth + camera_info"];
+  bridge -> dscan [label="depth"];
+  dscan  -> nav2  [label="/depth_scan"];
   slam   -> nav2  [label="/map, TF map→odom"];
   slam   -> expl  [label="/map"];
   expl   -> nav2  [label="NavigateToPose"];
