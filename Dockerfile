@@ -46,8 +46,12 @@ FROM osrf/ros:jazzy-desktop-full AS demo
 
 SHELL ["/bin/bash", "-c"]
 WORKDIR /ws
-COPY src/ src/
-COPY --from=model /models/ src/semantic_nav_perception/models/
+# Manifests first: the slow dependency layer is rebuilt only when a package.xml changes.
+COPY src/semantic_nav_interfaces/package.xml src/semantic_nav_interfaces/
+COPY src/semantic_nav_perception/package.xml src/semantic_nav_perception/
+COPY src/semantic_nav_mapping/package.xml src/semantic_nav_mapping/
+COPY src/semantic_nav_commander/package.xml src/semantic_nav_commander/
+COPY src/semantic_nav_bringup/package.xml src/semantic_nav_bringup/
 
 # Every dependency (Nav2, slam_toolbox, the TurtleBot4 / Create3 simulation, ...);
 # OpenVINO from pip, with numpy kept < 2 for the distro's cv_bridge (PROBLEMS_LOG #35).
@@ -57,6 +61,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends python3-pip \
     && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir --break-system-packages "openvino==2026.4.0" "numpy<2"
+
+COPY src/ src/
+COPY --from=model /models/ src/semantic_nav_perception/models/
 
 RUN source /opt/ros/jazzy/setup.bash \
     && colcon build --event-handlers console_cohesion+
