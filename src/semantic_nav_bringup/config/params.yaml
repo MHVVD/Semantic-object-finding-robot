@@ -68,6 +68,24 @@ projector_node:
     marker_lifetime_s: 1.0
     stats_period_s: 10.0
 
+# Depth camera -> LaserScan of table tops / chair seats for the Nav2 costmaps
+# (navigation.launch.py, exploration.launch.py; observation source depth_scan).
+depth_scan_node:
+  ros__parameters:
+    use_sim_time: true
+    depth_topic: /oakd/rgb/preview/depth
+    camera_info_topic: /oakd/rgb/preview/camera_info
+    scan_topic: /depth_scan
+    target_frame: base_link       # on the floor (Create3): z = height above the floor
+    decimation: 4                 # 160 x 120 points: plenty for a 5 cm costmap at <= 3 m
+    min_height_m: 0.05            # above the floor (and its depth noise)
+    max_height_m: 1.0             # table tops 0.74 m, counters; the robot is 0.35 m tall
+    range_min_m: 0.25
+    range_max_m: 3.0              # depth is reliable to ~3-4 m (M4)
+    angle_increment_rad: 0.01
+    max_rate_hz: 5.0
+    tf_timeout_s: 1.0
+
 semantic_map_node:
   ros__parameters:
     use_sim_time: true

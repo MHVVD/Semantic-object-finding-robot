@@ -43,6 +43,7 @@ setup(
         'console_scripts': [
             'detector_node = semantic_nav_perception.detector_node:main',
             'projector_node = semantic_nav_perception.projector_node:main',
+            'depth_scan_node = semantic_nav_perception.depth_scan_node:main',
             'capture_frames = semantic_nav_perception.capture_frames:main',
             'evaluate_detector = semantic_nav_perception.evaluate_detector:main',
             'benchmark_detector = semantic_nav_perception.benchmark_detector:main',
