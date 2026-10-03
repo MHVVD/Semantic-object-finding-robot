@@ -278,9 +278,10 @@ local_costmap:
           obstacle_max_range: 2.5
           obstacle_min_range: 0.0
       depth_layer:
-        # Table tops / chair seats from the depth camera (depth_scan_node). A separate
-        # layer, so the lidar's clearing (it sees under the table) cannot erase them;
-        # +inf beams don't clear: near a table its top is out of view, not gone.
+        # Table tops / chair seats from the depth camera (depth_scan_node), LOCAL costmap
+        # only. A separate layer, so the lidar's clearing (it sees under the table)
+        # cannot erase them; +inf beams don't clear: near a table its top is out of
+        # view, not gone. The rolling window forgets them once the robot moves on.
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         observation_sources: depth_scan
@@ -310,7 +311,10 @@ global_costmap:
       robot_radius: 0.19   # TUNED: Create3 radius 0.1705 m + 2 cm margin (was 0.22, a TB3-sized guess)
       resolution: 0.05
       track_unknown_space: true
-      plugins: ["static_layer", "obstacle_layer", "depth_layer", "inflation_layer"]
+      # No depth_layer here (M9, #95): its marks never expire, and during a long SLAM run
+      # stale ones accumulated until doorways closed. The rolling local costmap is enough
+      # to stop the robot at a table it is looking at.
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -324,24 +328,6 @@ global_costmap:
           raytrace_max_range: 3.0
           raytrace_min_range: 0.0
           obstacle_max_range: 2.5
-          obstacle_min_range: 0.0
-      depth_layer:
-        # Table tops / chair seats from the depth camera (depth_scan_node). A separate
-        # layer, so the lidar's clearing (it sees under the table) cannot erase them;
-        # +inf beams don't clear: near a table its top is out of view, not gone.
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
-        observation_sources: depth_scan
-        depth_scan:
-          topic: /depth_scan
-          max_obstacle_height: 2.0
-          clearing: True
-          marking: True
-          data_type: "LaserScan"
-          inf_is_valid: False
-          raytrace_max_range: 3.0
-          raytrace_min_range: 0.0
-          obstacle_max_range: 3.0
           obstacle_min_range: 0.0
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
