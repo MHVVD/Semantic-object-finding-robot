@@ -54,8 +54,9 @@ COPY --from=model /models/ src/semantic_nav_perception/models/
 RUN apt-get update \
     && rosdep update --rosdistro jazzy \
     && rosdep install --from-paths src --ignore-src --rosdistro jazzy -y \
-    && pip install --no-cache-dir --break-system-packages "openvino==2026.4.0" "numpy<2" \
+    && apt-get install -y --no-install-recommends python3-pip \
     && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir --break-system-packages "openvino==2026.4.0" "numpy<2"
 
 RUN source /opt/ros/jazzy/setup.bash \
     && colcon build --event-handlers console_cohesion+
