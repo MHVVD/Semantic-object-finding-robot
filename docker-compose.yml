@@ -1,0 +1,30 @@
+# One-command quickstart.
+#
+#   docker compose up --build demo     # explore the unknown house, then go to objects
+#   docker compose up --build test     # unit + lint tests (what CI runs)
+#
+# RViz: allow local X connections once (`xhost +local:docker`), then
+#   RVIZ=true docker compose up --build demo
+# Results (exploration CSV, semantic map YAML, scores) land in ./demo_output/.
+services:
+  test:
+    build:
+      context: .
+      target: test
+
+  demo:
+    build:
+      context: .
+      target: demo
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - RVIZ=${RVIZ:-false}
+      - DEMO_OBJECTS=${DEMO_OBJECTS:-toilet,potted plant,tv}
+      - DEMO_OUT=/out
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./demo_output:/out
+    # Gazebo renders the camera with the GPU if /dev/dri exists (much faster than
+    # software rendering). Delete these two lines on machines without it.
+    devices:
+      - /dev/dri:/dev/dri
