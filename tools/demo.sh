@@ -9,6 +9,7 @@
 #   RVIZ=true          show RViz (needs an X display)
 #   DEMO_OBJECTS=...   comma-separated object names for step 3 (default: toilet,potted plant,tv)
 #   DEMO_OUT=dir       where the logs / CSV / semantic map / scores go (default: ./demo_output)
+#   HOST_UID/HOST_GID  owner to give DEMO_OUT at the end (set by docker-compose.yml)
 
 set -u
 OUT=${DEMO_OUT:-demo_output}
@@ -20,6 +21,8 @@ cleanup() {
     for pid in $COMMANDER $LAUNCH; do kill -INT "$pid" 2>/dev/null; done
     sleep 5
     pkill -9 -f "[g]z sim" 2>/dev/null
+    # In Docker this runs as root: hand the results back to the host user.
+    [ -n "${HOST_UID:-}" ] && chown -R "$HOST_UID:${HOST_GID:-$HOST_UID}" "$OUT"
 }
 trap cleanup EXIT
 
