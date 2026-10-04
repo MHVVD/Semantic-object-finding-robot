@@ -2,12 +2,13 @@
 
 **A TurtleBot 4 that explores an unknown house on its own, learns where the objects are with a CPU-only YOLO detector, and drives to them when you say "go to the fridge".**
 
+[![CI](https://github.com/MHVVD/Semantic-object-finding-robot/actions/workflows/ci.yml/badge.svg)](https://github.com/MHVVD/Semantic-object-finding-robot/actions/workflows/ci.yml)
+
 ROS 2 Jazzy · Gazebo Harmonic · Nav2 · slam_toolbox · YOLO11n → ONNX → OpenVINO · Python (rclpy) · Docker · GitHub Actions
 
-<!-- DEMO GIF: record it with docs/DEMO_SHOTLIST.md, save as docs/media/demo.gif, then remove this comment. -->
 <p align="center">
   <img src="docs/media/demo.gif" alt="Demo: the robot explores the house, builds a semantic map and drives to an object by name" width="800">
-  <br><em>90-second demo: autonomous exploration → semantic map → "go to the toilet" (sped up)</em>
+  <br><em>Autonomous exploration → semantic map → "go to the toilet" (time-lapse). Full video: <a href="docs/media/demo.mp4">docs/media/demo.mp4</a> (71 s)</em>
 </p>
 
 ## What it does
@@ -71,7 +72,7 @@ The full tables, every false positive and every missed object are in
 Needs Docker with Compose. Works on Linux; RViz needs an X server.
 
 ```bash
-git clone <this repository> semantic_nav && cd semantic_nav
+git clone https://github.com/MHVVD/Semantic-object-finding-robot.git semantic_nav && cd semantic_nav
 docker compose up --build demo
 ```
 
@@ -95,7 +96,8 @@ GPU, add `-f docker-compose.yml -f docker-compose.gpu.yml` for faster rendering 
 ### Native install (Ubuntu 24.04 + ROS 2 Jazzy)
 
 ```bash
-mkdir -p ~/semantic_ws && cd ~/semantic_ws && git clone <this repository> .
+mkdir -p ~/semantic_ws && cd ~/semantic_ws
+git clone https://github.com/MHVVD/Semantic-object-finding-robot.git .
 rosdep install --from-paths src --ignore-src -y
 pip install --user --break-system-packages openvino "numpy<2"     # no rosdep key for OpenVINO
 python3 -m venv .venv-export
