@@ -10,11 +10,13 @@
 # Results (exploration CSV, semantic map YAML, scores) land in ./demo_output/.
 services:
   test:
+    image: semantic_nav:test
     build:
       context: .
       target: test
 
   demo:
+    image: semantic_nav:demo
     build:
       context: .
       target: demo

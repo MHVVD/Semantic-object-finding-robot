@@ -1,5 +1,9 @@
 # Demo video (90 s) and GIF: script, shot list and ffmpeg commands
 
+> The committed video (`docs/media/demo.mp4`, GIF in the README) was recorded from a real
+> autonomous run on a virtual display, with `rviz/demo.rviz` as the RViz layout. The plan
+> below is for recording your own version, for example with the Gazebo GUI.
+
 **Story in one line:** *the robot starts knowing nothing, explores and learns where
 things are, then goes to the toilet when asked, and here is how well it works.*
 
